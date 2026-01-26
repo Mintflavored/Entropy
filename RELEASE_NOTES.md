@@ -1,7 +1,10 @@
 ### 🚀 New Features
-- **CI/CD Automation**: Integrated GitHub Actions for automated building and cross-platform releases.
-- **Unit Testing**: Implemented a testing suite for core modules (`ConfigManager`, `LocalizationManager`).
-- **Release Template**: Added support for `RELEASE_NOTES.md` to streamline the release documentation process.
+- **CI/CD Finalization**: Release process is now fully automated via GitHub Actions.
+- **Unit Testing**: Core logic verification is integrated into the build pipeline.
+
+### 🐞 Bug Fixes
+- **Build Infrastructure**: Fixed missing `entropy.spec` in the repository.
+- **Version Alignment**: Synchronized environment version to 3.14.2 across all workflows.
 
 ### 🐞 Bug Fixes
 - Fixed `ModuleNotFoundError` during CI execution by correctly setting `PYTHONPATH`.
