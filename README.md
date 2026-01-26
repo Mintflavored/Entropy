@@ -1,6 +1,6 @@
-# 🛡️ Entropy (v0.31.1)
+# 🛡️ Entropy (v0.31.3)
 
-[![Version](https://img.shields.io/badge/version-0.31.1-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
+[![Version](https://img.shields.io/badge/version-0.31.3-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-yellow.svg)](https://python.org)
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)]()
@@ -84,6 +84,8 @@ python main.py
 
 | Version | Changes |
 |---------|---------|
+| **v0.31.3** | **Build Fix**: Added Pillow for automatic icon conversion. |
+| **v0.31.2** | **CI/CD Fix**: Included build spec in repository for automated releases. |
 | **v0.31.1** | **CI/CD**: Added GitHub Actions for automatic building and release. |
 | **v0.31.0** | **Multi-language Support**: Added full Russian and English interface localization. |
 | **v0.30.0** | Transition to real-time data (PPS, Jitter, Logs). Removed simulations. Graph optimization. |
@@ -169,6 +171,8 @@ python main.py
 
 | Версия | Изменения |
 |--------|-----------|
+| **v0.31.3** | **Build Fix**: Добавлена библиотека Pillow для конвертации иконки. |
+| **v0.31.2** | **CI/CD Fix**: Включено build spec в репозиторий для автоматических релизов. |
 | **v0.31.1** | **CI/CD**: Добавлены GitHub Actions для автоматической сборки и релиза. |
 | **v0.31.0** | **Многоязычная поддержка**: Добавлена полная локализация на русский и английский языки. |
 | **v0.30.0** | Переход на реальные данные (PPS, Jitter, Logs). Удаление симуляции. Оптимизация графиков. |
