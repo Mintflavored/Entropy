@@ -1,6 +1,6 @@
-# 🛡️ Entropy (v0.31.0)
+# 🛡️ Entropy (v0.31.1)
 
-[![Version](https://img.shields.io/badge/version-0.31.0-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
+[![Version](https://img.shields.io/badge/version-0.31.1-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-yellow.svg)](https://python.org)
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)]()
@@ -84,6 +84,7 @@ python main.py
 
 | Версия | Изменения |
 |--------|-----------|
+| **v0.31.1** | **CI/CD**: Добавлены GitHub Actions для автоматической сборки и релиза. |
 | **v0.31.0** | **Многоязычная поддержка**: Добавлена полная локализация на русский и английский языки. |
 | **v0.30.0** | Переход на реальные данные (PPS, Jitter, Logs). Удаление симуляции. Оптимизация графиков. |
 | **v0.28.0** | Ребрендинг в **Entropy**, новый логотип, стабильный `ConfigManager`. |
@@ -168,6 +169,7 @@ python main.py
 
 | Version | Changes |
 |---------|---------|
+| **v0.31.1** | **CI/CD**: Added GitHub Actions for automatic building and release. |
 | **v0.31.0** | **Multi-language Support**: Added full Russian and English interface localization. |
 | **v0.30.0** | Transition to real-time data (PPS, Jitter, Logs). Removed simulations. Graph optimization. |
 | **v0.28.0** | Rebranded to **Entropy**, new logo, stable `ConfigManager`. |

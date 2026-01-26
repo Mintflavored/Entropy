@@ -39,22 +39,34 @@ jobs:
       run: |
         Compress-Archive -Path "dist/Entropy/*" -DestinationPath "Entropy-Full-Bundle-${{ github.ref_name }}.zip"
         
-    - name: Extract Tag Message
-      id: tag_info
+    - name: Extract Release Notes
+      id: release_notes
       shell: bash
       run: |
-        # Пытаемся получить описание из аннотированного тега
-        TAG_MSG=$(git tag -l --format='%(contents:body)' ${{ github.ref_name }})
-        if [ -z "$TAG_MSG" ]; then
-          TAG_MSG="Automatic release for version ${{ github.ref_name }}"
+        if [ -f "RELEASE_NOTES.md" ]; then
+          echo "Reading from RELEASE_NOTES.md"
+          # Читаем файл и экранируем спецсимволы для GitHub Output
+          CONTENT=$(cat RELEASE_NOTES.md)
+          # Используем EOF для многострочного вывода
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        else
+          echo "Reading from Tag Message"
+          TAG_MSG=$(git tag -l --format='%(contents:body)' ${{ github.ref_name }})
+          if [ -z "$TAG_MSG" ]; then
+            TAG_MSG="Automatic release for version ${{ github.ref_name }}"
+          fi
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$TAG_MSG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
         fi
-        echo "body=$TAG_MSG" >> $GITHUB_OUTPUT
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
         files: Entropy-Full-Bundle-*.zip
-        body: ${{ steps.tag_info.outputs.body }}
+        body: ${{ steps.release_notes.outputs.body }}
         draft: false
         prerelease: false
       env:
