@@ -3,7 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 venv/
+venv_release/
 .env
+
+# Build Artifacts
+build/
+dist/
+*.spec
 
 # Databases & Logs
 *.db
