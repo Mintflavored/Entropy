@@ -13,35 +13,75 @@
 
 ### ✨ Ключевые функции
 
-#### 📊 Реальный Мониторинг и Аналитика (v0.30.0)
-- **Real-time Dashboard**: Визуализация нагрузки CPU и RAM, а также отслеживание трафика пользователей.
-- **Full View Graphs**: Оптимизированные графики с историей до 100 точек (~16 мин), сеткой и реальными временными метками.
-- **True Network Metrics**: Прямое чтение PPS из `/proc/net/dev` и расчет Jitter через микро-пинги со стороны сервера.
+#### 📊 Реальный Мониторинг и Аналитика
+- **Real-time Dashboard**: Визуализация нагрузки CPU и RAM, отслеживание трафика пользователей.
+- **Full View Graphs**: Графики с историей до 100 точек (~16 мин) и реальными временными метками.
+- **True Network Metrics**: Прямое чтение PPS из `/proc/net/dev` и расчет Jitter через микро-пинги.
 - **Risk Index**: Умный алгоритм оценки вероятности блокировки на основе волатильности трафика.
 
 #### 🧠 Искусственный Интеллект (AI Bridge)
-- **Advanced Model Support**: Интеграция с **OpenAI (GPT-5.2)**, **Claude 4.5**, **Google Gemini** и **OpenRouter**.
-- **Autonomous Diagnostics**: Функция Tool Calling позволяет ИИ самостоятельно выполнять SSH-команды для анализа логов и конфигураций (Xray, Marzban, Sing-box).
-- **Configurable Limits**: Пользователь может ограничивать количество SSH-запросов ИИ для контроля безопасности и затрат токенов.
-- **Context Awareness**: Модель получает полные ТТХ сервера (CPU, OS, RAM) для выдачи точных рекомендаций.
+- **Multi-Provider Support**: Интеграция с **OpenAI**, **Claude**, **Google Gemini** и **OpenRouter**.
+- **Autonomous Diagnostics**: ИИ самостоятельно выполняет SSH-команды для анализа логов и конфигов.
+- **Configurable Limits**: Контроль количества SSH-запросов ИИ для безопасности и экономии токенов.
 
 #### 🛠️ Системные Возможности
-- **Live Probing Detection**: Анализ `/var/log/auth.log` для выявления реальных попыток брутфорса и сканирования.
-- **SSH Auto-Discovery**: Автоматическое определение установленных VPN-панелей и характеристик железа.
-- **Persistent Config**: Управление всеми настройками через GUI с сохранением в `config.json`.
+- **Live Probing Detection**: Анализ `/var/log/auth.log` для выявления брутфорс-атак.
+- **SSH Auto-Discovery**: Автоматическое определение VPN-панелей и характеристик сервера.
+- **Persistent Config**: Все настройки сохраняются в `config.json`.
 
 ---
 
-### 📝 Changelog (История изменений)
+### 🚀 Установка и Запуск
 
-- **v0.30.0 (Текущая)**: 
-    - Переход на **реальные данные** (PPS, Jitter, Logs). Удаление симуляции.
-    - Оптимизация графиков "Full View" (100 точек, Real-time X-Axis).
-    - Синхронизация по SSH/SFTP с поддержкой новых типов VPN-панелей.
-- **v0.28.0**: Ребрендинг в **Entropy**, новый логотип, стабильный `ConfigManager`.
-- **v0.25.0**: Рефакторинг на модульную архитектуру, поддержка нескольких ИИ-провайдеров.
-- **v0.20.0**: Внедрение AI Tool Calling — ИИ получил доступ к SSH-диагностике.
-- **v0.15.0**: Первый модуль безопасности и графики PPS/Jitter.
+#### Шаг 1: Настройка VPS (Серверная часть)
+
+Для работы дашборда необходимо установить скрипт мониторинга на ваш VPS:
+
+```bash
+# 1. Создайте папку и скопируйте скрипт мониторинга
+mkdir -p /root/monitoring
+# Загрузите monitor.py из scripts/server/ в /root/monitoring/
+
+# 2. Установите зависимости
+apt update && apt install python3-pip -y
+pip3 install psutil
+
+# 3. Настройте автозапуск через Systemd
+# Скопируйте entropy-monitor.service из scripts/server/ в /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable entropy-monitor
+systemctl start entropy-monitor
+```
+
+#### Шаг 2: Запуск Desktop-приложения (Клиент)
+
+```bash
+# 1. Клонируйте репозиторий
+git clone https://github.com/Mintflavored/entropy.git
+cd entropy
+
+# 2. Установите зависимости Python
+pip install -r requirements.txt
+
+# 3. Настройте подключение
+# Скопируйте .env.example в .env и заполните SSH-данные вашего VPS
+
+# 4. Запустите приложение
+python main.py
+```
+
+> **Готовый .exe**: Вы также можете скачать собранный исполняемый файл из раздела [Releases](https://github.com/Mintflavored/Entropy/releases). Архив уже содержит папку `server/` с готовыми скриптами для VPS.
+
+---
+
+### 📝 История изменений (Changelog)
+
+| Версия | Изменения |
+|--------|-----------|
+| **v0.30.0** | Переход на реальные данные (PPS, Jitter, Logs). Удаление симуляции. Оптимизация графиков. |
+| **v0.28.0** | Ребрендинг в **Entropy**, новый логотип, стабильный `ConfigManager`. |
+| **v0.25.0** | Модульная архитектура, поддержка нескольких ИИ-провайдеров. |
+| **v0.20.0** | AI Tool Calling — ИИ получил доступ к SSH-диагностике. |
 
 ---
 
@@ -52,52 +92,76 @@
 
 ### ✨ Key Features
 
-#### 📊 Real Monitoring & Analytics (v0.30.0)
+#### 📊 Real Monitoring & Analytics
 - **Real-time Dashboard**: CPU and RAM load visualization, real-time user traffic tracking.
-- **Full View Graphs**: Optimized charts with up to 100 history points (~16 min), grids, and real-time timestamps.
-- **True Network Metrics**: Direct PPS reading from `/proc/net/dev` and Jitter calculation via server-side micro-pings.
+- **Full View Graphs**: Charts with up to 100 history points (~16 min) and real-time timestamps.
+- **True Network Metrics**: Direct PPS reading from `/proc/net/dev` and Jitter calculation via micro-pings.
 - **Risk Index**: Smart algorithm for assessing blocking probability based on traffic volatility.
 
 #### 🧠 Artificial Intelligence (AI Bridge)
-- **Advanced Model Support**: Integration with **OpenAI (GPT-5.2)**, **Claude 4.5**, **Google Gemini**, and **OpenRouter**.
-- **Autonomous Diagnostics**: Tool Calling feature allows the AI to independently execute SSH commands to analyze logs and configurations (Xray, Marzban, Sing-box).
-- **Configurable Limits**: Users can set a cap on AI SSH requests for budget control and security oversight.
-- **Context Awareness**: The model receives full server specifications (CPU, OS, RAM) to provide precise recommendations.
+- **Multi-Provider Support**: Integration with **OpenAI**, **Claude**, **Google Gemini**, and **OpenRouter**.
+- **Autonomous Diagnostics**: AI independently executes SSH commands to analyze logs and configs.
+- **Configurable Limits**: Control over AI SSH request count for security and token budgeting.
 
 #### 🛠️ System Capabilities
-- **Live Probing Detection**: Parsing `/var/log/auth.log` to identify real brute-force and scanning attempts.
-- **SSH Auto-Discovery**: Automatic detection of installed VPN panels and hardware specifications.
-- **Persistent Config**: Management of all settings via GUI with saving to `config.json`.
+- **Live Probing Detection**: Parsing `/var/log/auth.log` to identify brute-force attempts.
+- **SSH Auto-Discovery**: Automatic detection of VPN panels and server hardware specs.
+- **Persistent Config**: All settings saved to `config.json`.
 
 ---
 
-### 📝 Changelog (History)
+### � Installation & Setup
 
-- **v0.30.0 (Current)**: 
-    - Transition to **real-time data** (PPS, Jitter, Logs). Removed all simulations.
-    - "Full View" graph optimization (100 points, Real-time X-Axis).
-    - SSH/SFTP synchronization with support for new VPN panel types.
-- **v0.28.0**: Rebranded to **Entropy**, new logo, stable `ConfigManager`.
-- **v0.25.0**: Full modular refactoring, multi-LLM provider support.
-- **v0.20.0**: Introduction of AI Tool Calling — AI gained SSH diagnostic access.
-- **v0.15.0**: Initial Security Module and PPS/Jitter charts.
+#### Step 1: VPS Setup (Server-side)
+
+The dashboard requires a monitoring script installed on your VPS:
+
+```bash
+# 1. Create folder and copy the monitoring script
+mkdir -p /root/monitoring
+# Upload monitor.py from scripts/server/ to /root/monitoring/
+
+# 2. Install dependencies
+apt update && apt install python3-pip -y
+pip3 install psutil
+
+# 3. Configure auto-start via Systemd
+# Copy entropy-monitor.service from scripts/server/ to /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable entropy-monitor
+systemctl start entropy-monitor
+```
+
+#### Step 2: Run Desktop Application (Client)
+
+```bash
+# 1. Clone repository
+git clone https://github.com/Mintflavored/entropy.git
+cd entropy
+
+# 2. Install Python dependencies
+pip install -r requirements.txt
+
+# 3. Configure connection
+# Copy .env.example to .env and fill in your VPS SSH credentials
+
+# 4. Run the application
+python main.py
+```
+
+> **Pre-built .exe**: You can also download the bundled executable from the [Releases](https://github.com/Mintflavored/Entropy/releases) section. The archive includes a `server/` folder with ready-to-use monitoring scripts for your VPS.
 
 ---
 
-### 🚀 Installation & Usage
+### � Changelog
 
-1. **Clone repository:**
-   ```bash
-   git clone https://github.com/bossv/entropy.git
-   ```
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. **Run:**
-   ```bash
-   python main.py
-   ```
+| Version | Changes |
+|---------|---------|
+| **v0.30.0** | Transition to real-time data (PPS, Jitter, Logs). Removed simulations. Graph optimization. |
+| **v0.28.0** | Rebranded to **Entropy**, new logo, stable `ConfigManager`. |
+| **v0.25.0** | Modular architecture, multi-LLM provider support. |
+| **v0.20.0** | AI Tool Calling — AI gained SSH diagnostic access. |
 
 ---
+
 *Developed with ❤️ for Digital Freedom.*
