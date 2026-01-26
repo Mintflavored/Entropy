@@ -110,7 +110,7 @@ python main.py
 
 ---
 
-### � Installation & Setup
+### 🚀 Installation & Setup
 
 #### Step 1: VPS Setup (Server-side)
 
@@ -153,7 +153,7 @@ python main.py
 
 ---
 
-### � Changelog
+### 📝 Changelog
 
 | Version | Changes |
 |---------|---------|
