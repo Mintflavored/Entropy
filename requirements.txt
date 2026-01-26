@@ -1,0 +1,8 @@
+PyQt6
+paramiko
+pandas
+pyqtgraph
+python-dotenv
+openai
+anthropic
+google-generativeai
