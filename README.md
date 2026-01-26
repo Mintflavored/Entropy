@@ -1,6 +1,6 @@
-# 🛡️ Entropy (v0.31.3)
+# 🛡️ Entropy (v0.31.4)
 
-[![Version](https://img.shields.io/badge/version-0.31.3-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
+[![Version](https://img.shields.io/badge/version-0.31.4-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-yellow.svg)](https://python.org)
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)]()
@@ -82,8 +82,7 @@ python main.py
 
 ### 📝 Changelog
 
-| Version | Changes |
-|---------|---------|
+| **v0.31.4** | **CI Permission Fix**: Added explicit write permissions for releases. |
 | **v0.31.3** | **Build Fix**: Added Pillow for automatic icon conversion. |
 | **v0.31.2** | **CI/CD Fix**: Included build spec in repository for automated releases. |
 | **v0.31.1** | **CI/CD**: Added GitHub Actions for automatic building and release. |
@@ -169,8 +168,7 @@ python main.py
 
 ### 📝 История изменений (Changelog)
 
-| Версия | Изменения |
-|--------|-----------|
+| **v0.31.4** | **CI Permission Fix**: Добавлены права записи для создания релиза. |
 | **v0.31.3** | **Build Fix**: Добавлена библиотека Pillow для конвертации иконки. |
 | **v0.31.2** | **CI/CD Fix**: Включено build spec в репозиторий для автоматических релизов. |
 | **v0.31.1** | **CI/CD**: Добавлены GitHub Actions для автоматической сборки и релиза. |

@@ -1,9 +1,6 @@
-### 🚀 New Features
-- **CI/CD Finalization**: Release process is now fully automated via GitHub Actions.
-- **Unit Testing**: Core logic verification is integrated into the build pipeline.
-
 ### 🐞 Bug Fixes
-- **Build System**: Added `Pillow` dependency to handle automatic `.png` to `.ico` conversion for the Windows executable icon.
+- **GitHub Permissions**: Added explicit `contents: write` permissions to the workflow to allow automatic release creation (Fixes 403 Forbidden).
+- **Build System**: Added `Pillow` dependency for automatic icon conversion.
 - **Workflow Stability**: Resolved the "correct format" icon error in PyInstaller.
 
 ### 🚀 New Features
