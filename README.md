@@ -1,6 +1,6 @@
-# 🛡️ Entropy (v0.30.0)
+# 🛡️ Entropy (v0.31.0)
 
-[![Version](https://img.shields.io/badge/version-0.30.0-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
+[![Version](https://img.shields.io/badge/version-0.31.0-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-yellow.svg)](https://python.org)
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)]()
@@ -27,6 +27,7 @@
 #### 🧠 Искусственный Интеллект (AI Bridge)
 - **Multi-Provider Support**: Интеграция с **OpenAI**, **Claude**, **Google Gemini** и **OpenRouter**.
 - **Autonomous Diagnostics**: ИИ самостоятельно выполняет SSH-команды для анализа логов и конфигов.
+- 🌐 **Multi-language**: Полная поддержка русского и английского языков.
 - **Configurable Limits**: Контроль количества SSH-запросов ИИ для безопасности и экономии токенов.
 
 #### 🛠️ Системные Возможности
@@ -83,10 +84,14 @@ python main.py
 
 | Версия | Изменения |
 |--------|-----------|
+| **v0.31.0** | **Многоязычная поддержка**: Добавлена полная локализация на русский и английский языки. |
 | **v0.30.0** | Переход на реальные данные (PPS, Jitter, Logs). Удаление симуляции. Оптимизация графиков. |
 | **v0.28.0** | Ребрендинг в **Entropy**, новый логотип, стабильный `ConfigManager`. |
 | **v0.25.0** | Модульная архитектура, поддержка нескольких ИИ-провайдеров. |
 | **v0.20.0** | AI Tool Calling — ИИ получил доступ к SSH-диагностике. |
+| **v0.15.0** | Интеграция SSH-терминала и базовый мониторинг VPS. |
+| **v0.10.0** | Первоначальный прототип: GUI для сетевой статистики и базовая конфигурация. |
+| **v0.1.0** | Инициализация проекта. |
 
 ---
 
@@ -106,6 +111,7 @@ python main.py
 #### 🧠 Artificial Intelligence (AI Bridge)
 - **Multi-Provider Support**: Integration with **OpenAI**, **Claude**, **Google Gemini**, and **OpenRouter**.
 - **Autonomous Diagnostics**: AI independently executes SSH commands to analyze logs and configs.
+- 🌐 **Multi-language**: Full support for Russian and English languages.
 - **Configurable Limits**: Control over AI SSH request count for security and token budgeting.
 
 #### 🛠️ System Capabilities
@@ -162,10 +168,14 @@ python main.py
 
 | Version | Changes |
 |---------|---------|
+| **v0.31.0** | **Multi-language Support**: Added full Russian and English interface localization. |
 | **v0.30.0** | Transition to real-time data (PPS, Jitter, Logs). Removed simulations. Graph optimization. |
 | **v0.28.0** | Rebranded to **Entropy**, new logo, stable `ConfigManager`. |
 | **v0.25.0** | Modular architecture, multi-LLM provider support. |
 | **v0.20.0** | AI Tool Calling — AI gained SSH diagnostic access. |
+| **v0.15.0** | SSH Terminal integration and basic VPS monitoring. |
+| **v0.10.0** | Initial prototype: GUI for network stats and basic configuration. |
+| **v0.1.0**  | Project initialization. |
 
 ---
 

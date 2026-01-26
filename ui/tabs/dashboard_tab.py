@@ -1,5 +1,6 @@
 import pyqtgraph as pg
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QHeaderView, QLabel
+from core.localization import L
 
 class DashboardTab(QWidget):
     """Вкладка мониторинга ресурсов сервера."""
@@ -11,7 +12,7 @@ class DashboardTab(QWidget):
         layout.addWidget(self.graph_widget)
         
         # CPU Plot
-        self.cpu_plot = self.graph_widget.addPlot(title="CPU Load (%)")
+        self.cpu_plot = self.graph_widget.addPlot()
         self.cpu_plot.setYRange(0, 100)
         self.cpu_plot.setAxisItems({'bottom': pg.DateAxisItem()})
         self.cpu_plot.showGrid(x=True, y=True, alpha=0.3)
@@ -19,19 +20,29 @@ class DashboardTab(QWidget):
         
         self.graph_widget.nextRow()
         # RAM Plot
-        self.ram_plot = self.graph_widget.addPlot(title="RAM Usage (%)")
+        self.ram_plot = self.graph_widget.addPlot()
         self.ram_plot.setYRange(0, 100)
         self.ram_plot.setAxisItems({'bottom': pg.DateAxisItem()})
         self.ram_plot.showGrid(x=True, y=True, alpha=0.3)
         self.ram_curve = self.ram_plot.plot(pen=pg.mkPen(color='#238636', width=2))
         
         # Таблица пользователей
-        layout.addWidget(QLabel("👥 Активные пользователи:"))
+        self.lbl_users = QLabel()
+        layout.addWidget(self.lbl_users)
         self.user_table = QTableWidget()
         self.user_table.setColumnCount(3)
-        self.user_table.setHorizontalHeaderLabels(["User", "IP", "Traffic"])
         self.user_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.user_table)
+        
+        self.retranslate_ui()
+
+    def retranslate_ui(self):
+        self.cpu_plot.setTitle(L.tr("chart_cpu"))
+        self.ram_plot.setTitle(L.tr("chart_ram"))
+        self.lbl_users.setText(f"👥 {L.tr('tab_dashboard')}:")
+        self.user_table.setHorizontalHeaderLabels([
+            L.tr("table_user"), L.tr("table_ip"), L.tr("table_traffic")
+        ])
 
     def update_charts(self, cpu_history, ram_history, timestamps):
         self.cpu_curve.setData(timestamps, cpu_history)

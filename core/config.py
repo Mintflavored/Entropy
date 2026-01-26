@@ -21,7 +21,8 @@ class ConfigManager:
             "ai_provider": "openai_compatible",
             "ai_model": "gpt-4o",
             "ai_base_url": "https://api.openai.com/v1",
-            "ai_tool_limit": 5
+            "ai_tool_limit": 5,
+            "language": "ru"
         }
         self.load()
 

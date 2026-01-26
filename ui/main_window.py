@@ -15,6 +15,7 @@ from ui.tabs.ai_tab import AITab
 from ui.tabs.settings_tab import SettingsTab
 from ui.tabs.system_info_tab import SystemInfoTab
 from ui.styles import STYLE_SHEET
+from core.localization import L
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,10 @@ class MainWindow(QMainWindow):
     def __init__(self, cfg):
         super().__init__()
         self.cfg = cfg
-        self.setWindowTitle("Entropy v0.30.0 - Advanced VPN Analytics & Monitoring")
+        # Set initial language
+        L.set_language(self.cfg.get("language", "ru"))
+        
+        self.retranslate_ui() # Set initial window title
         self.resize(1000, 800)
         self.setStyleSheet(STYLE_SHEET)
         
@@ -70,8 +74,8 @@ class MainWindow(QMainWindow):
             self.logo_label.setPixmap(pixmap.scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         status_layout.addWidget(self.logo_label)
         
-        self.status_label = QLabel("🚀 Инициализация...")
-        self.risk_label = QLabel("РИСК: UNKNOWN")
+        self.status_label = QLabel()
+        self.risk_label = QLabel()
         status_layout.addWidget(self.status_label)
         status_layout.addStretch()
         status_layout.addWidget(self.risk_label)
@@ -87,30 +91,62 @@ class MainWindow(QMainWindow):
         self.tab_settings = SettingsTab(self.cfg, self.on_settings_saved)
         self.tab_info = SystemInfoTab(self.cfg, None)
         
-        self.tabs.addTab(self.tab_dash, "Dashboard")
-        self.tabs.addTab(self.tab_sec, "Security Analytics")
-        self.tabs.addTab(self.tab_ai, "AI Insights")
-        self.tabs.addTab(self.tab_info, "System Info")
-        self.tabs.addTab(self.tab_settings, "Settings")
+        self.tabs.addTab(self.tab_dash, "")
+        self.tabs.addTab(self.tab_sec, "")
+        self.tabs.addTab(self.tab_ai, "")
+        self.tabs.addTab(self.tab_info, "")
+        self.tabs.addTab(self.tab_settings, "")
+        
+        self.retranslate_ui()
+
+    def retranslate_ui(self):
+        """Update all UI text based on current language."""
+        self.setWindowTitle(L.tr("window_title"))
+        
+        if hasattr(self, 'status_label'):
+            if not self.status_label.text() or "🚀" in self.status_label.text():
+                self.status_label.setText(L.tr("status_init"))
+            
+            # Risk Label (persistent part)
+            risk_text = self.risk_label.text().split(": ")[-1] if ": " in self.risk_label.text() else L.tr("risk_unknown")
+            self.risk_label.setText(L.tr("risk_label").format(risk_text))
+            
+            # Tabs
+            self.tabs.setTabText(0, L.tr("tab_dashboard"))
+            self.tabs.setTabText(1, L.tr("tab_security"))
+            self.tabs.setTabText(2, L.tr("tab_ai"))
+            self.tabs.setTabText(3, L.tr("tab_info"))
+            self.tabs.setTabText(4, L.tr("tab_settings"))
+            
+            # Propagate to tabs
+            self.tab_dash.retranslate_ui()
+            self.tab_sec.retranslate_ui()
+            self.tab_ai.retranslate_ui()
+            self.tab_settings.retranslate_ui()
+            self.tab_info.retranslate_ui()
 
     def refresh_data(self):
         if not self.data_worker.isRunning():
-            self.status_label.setText("Синхронизация...")
+            self.status_label.setText(L.tr("status_sync"))
             self.data_worker.start()
 
     def on_settings_saved(self):
-        self.status_label.setText("Настройки сохранены. Переподключение...")
+        # Update language if changed in settings
+        L.set_language(self.cfg.get("language", "ru"))
+        self.retranslate_ui()
+        
+        self.status_label.setText(L.tr("status_settings_saved"))
         self.timer.stop()
         self.timer.start(self.cfg.get("sync_interval_ms", 10000))
         self.refresh_data()
 
     def on_data_ready(self, success, message, discovery, security_data=None):
         if not success:
-            self.status_label.setText(f"ОШИБКА: {message}")
+            self.status_label.setText(L.tr("status_error").format(message))
             self.status_label.setStyleSheet("color: #ff4444;")
             return
             
-        self.status_label.setText(f"Обновлено в {time.strftime('%H:%M:%S')}")
+        self.status_label.setText(L.tr("status_updated").format(time.strftime('%H:%M:%S')))
         self.status_label.setStyleSheet("color: #00ff00;")
         
         if discovery:
@@ -146,7 +182,7 @@ class MainWindow(QMainWindow):
             self.tab_sec.update_data(self.history_pps, self.timestamps, self.history_jitter, probing_list)
             
             risk_label, color = SecurityEngine.calculate_risk(current_pps, current_jitter)
-            self.risk_label.setText(f"РИСК: {risk_label}")
+            self.risk_label.setText(L.tr("risk_label").format(risk_label))
             self.risk_label.setStyleSheet(f"color: {color}; font-weight: bold;")
             
             # Store for AI
