@@ -35,4 +35,5 @@ jobs:
         # Запуск тестов. Используем xvfb для имитации дисплея (нужно для PyQt)
         sudo apt-get install -y libxcb-xinerama0
         export QT_QPA_PLATFORM=offscreen
-        pytest
+        export PYTHONPATH=$PYTHONPATH:.
+        python -m pytest
