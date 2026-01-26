@@ -1,0 +1,61 @@
+name: Entropy Automated Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Нужно для получения сообщений тегов
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.14.2'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller PyQt6 pyqtgraph
+        
+    - name: Build with PyInstaller
+      run: |
+        pyinstaller entropy.spec
+        
+    - name: Bundle Server Scripts
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force -Path "dist/Entropy/server"
+        Copy-Item -Path "scripts/server/*" -Destination "dist/Entropy/server/" -Recurse
+        
+    - name: Create Zip Archive
+      shell: pwsh
+      run: |
+        Compress-Archive -Path "dist/Entropy/*" -DestinationPath "Entropy-Full-Bundle-${{ github.ref_name }}.zip"
+        
+    - name: Extract Tag Message
+      id: tag_info
+      shell: bash
+      run: |
+        # Пытаемся получить описание из аннотированного тега
+        TAG_MSG=$(git tag -l --format='%(contents:body)' ${{ github.ref_name }})
+        if [ -z "$TAG_MSG" ]; then
+          TAG_MSG="Automatic release for version ${{ github.ref_name }}"
+        fi
+        echo "body=$TAG_MSG" >> $GITHUB_OUTPUT
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: Entropy-Full-Bundle-*.zip
+        body: ${{ steps.tag_info.outputs.body }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
