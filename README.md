@@ -1,5 +1,10 @@
 # 🛡️ Entropy (v0.30.0)
 
+[![Version](https://img.shields.io/badge/version-0.30.0-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10+-yellow.svg)](https://python.org)
+[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)]()
+
 ![Entropy Logo](./assets/logo.png)
 
 [**Русский**](#russian) | [**English**](#english)
