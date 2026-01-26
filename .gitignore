@@ -9,7 +9,6 @@ venv_release/
 # Build Artifacts
 build/
 dist/
-*.spec
 
 # Databases & Logs
 *.db
