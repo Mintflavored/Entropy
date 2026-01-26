@@ -82,6 +82,8 @@ python main.py
 
 ### 📝 Changelog
 
+| Version | Changes |
+|---------|---------|
 | **v0.31.4** | **CI Permission Fix**: Added explicit write permissions for releases. |
 | **v0.31.3** | **Build Fix**: Added Pillow for automatic icon conversion. |
 | **v0.31.2** | **CI/CD Fix**: Included build spec in repository for automated releases. |
@@ -168,6 +170,8 @@ python main.py
 
 ### 📝 История изменений (Changelog)
 
+| Версия | Изменения |
+|--------|-----------|
 | **v0.31.4** | **CI Permission Fix**: Добавлены права записи для создания релиза. |
 | **v0.31.3** | **Build Fix**: Добавлена библиотека Pillow для конвертации иконки. |
 | **v0.31.2** | **CI/CD Fix**: Включено build spec в репозиторий для автоматических релизов. |
