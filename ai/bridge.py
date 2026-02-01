@@ -1,15 +1,15 @@
 import json
 import logging
 import paramiko
-from PyQt6.QtCore import QThread, pyqtSignal
+from PySide6.QtCore import QThread, Signal
 from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
 class AIAnalyzer(QThread):
     """Единый поток для AI анализа с поддержкой Tool Calling."""
-    result_ready = pyqtSignal(str)
-    error_occurred = pyqtSignal(str)
+    result_ready = Signal(str)
+    error_occurred = Signal(str)
 
     def __init__(self, cfg, data_context, server_config):
         super().__init__()
@@ -128,3 +128,71 @@ class AIAnalyzer(QThread):
             self.error_occurred.emit(f"AI Крит. Ошибка: {str(e)}")
         finally:
             if ssh: ssh.close()
+
+class EAIIWorker(QThread):
+    """Фоновый поток для Entropy AI Index (EAII) анализа."""
+    analysis_ready = Signal(float, str) # score, explanation
+    error_occurred = Signal(str)
+
+    def __init__(self, cfg, stats, context):
+        super().__init__()
+        self.cfg = cfg
+        self.stats = stats
+        self.context = context
+
+    def run(self):
+        try:
+            api_key = self.cfg.get("eaii_key") or self.cfg.ai_key
+            if not api_key:
+                return
+
+            provider = self.cfg.get("eaii_provider", "openai_compatible")
+            model = self.cfg.get("eaii_model", "gpt-4o-mini")
+            base_url = self.cfg.get("eaii_base_url")
+
+            if provider == "claude":
+                from ai.adapters.claude_adapter import ClaudeAdapter
+                adapter = ClaudeAdapter(api_key)
+            elif provider == "gemini":
+                from ai.adapters.gemini_adapter import GeminiAdapter
+                adapter = GeminiAdapter(api_key)
+            else:
+                from ai.adapters.openai_adapter import OpenAIAdapter
+                adapter = OpenAIAdapter(api_key, base_url if provider == "openai_compatible" else None)
+
+            prompt = f"""
+            Ты — микро-модуль безопасности Entropy AI Index (EAII) для VPN-сервера.
+            
+            ВАЖНЫЙ КОНТЕКСТ: Это легитимный VPN-сервер для защиты приватности пользователей.
+            - VPN трафик, шифрование и туннели — это НОРМАЛЬНО, не считай их угрозой
+            - Panel X-UI/3x-ui — это легитимная админ-панель VPN
+            - Множество подключений от разных IP — это нормальные VPN-пользователи
+            
+            РЕАЛЬНЫЕ УГРОЗЫ для оценки:
+            - Brute-force атаки на SSH (много failed login attempts)
+            - Необычно высокий PPS (DDoS)
+            - Аномальная нагрузка CPU/RAM
+            - Подозрительные probing-атаки
+            
+            МЕТРИКИ СЕРВЕРА: {json.dumps(self.stats, ensure_ascii=False)}
+            КОНТЕКСТ: {json.dumps(self.context, ensure_ascii=False)}
+            
+            ВЕРНИ СТРОГО JSON ФОРМАТ:
+            {{"score": 0-100, "explanation": "короткое пояснение (1 предложение) на языке пользователя"}}
+            
+            Язык ответа: {self.cfg.get('language', 'ru')}.
+            """
+
+            messages = [{"role": "system", "content": "Security micro-module."}, {"role": "user", "content": prompt}]
+            
+            response = adapter.generate(model, messages, json_mode=True)
+            data = json.loads(response.content)
+            
+            score = float(data.get("score", 0))
+            explanation = data.get("explanation", "Анализ завершен")
+            
+            self.analysis_ready.emit(score, explanation)
+
+        except Exception as e:
+            logger.error(f"EAII Error: {e}")
+            self.error_occurred.emit(str(e))

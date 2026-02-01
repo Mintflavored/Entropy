@@ -1,4 +1,5 @@
 import os
+import json
 
 class ClaudeAdapter:
     def __init__(self, api_key):
@@ -48,6 +49,4 @@ class ClaudeAdapter:
                                 self.function = type('obj', (object,), {'name': p.name, 'arguments': json.dumps(p.input)})()
                         self.tool_calls.append(MockToolCall(part))
         
-        # Нам нужен json для MockMessage
-        import json
         return MockMessage(response)

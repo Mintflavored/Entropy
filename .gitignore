@@ -5,29 +5,42 @@ __pycache__/
 venv/
 venv_release/
 .env
+*.egg-info/
 
 # Build Artifacts
 build/
 dist/
+*.spec
 
 # Databases & Logs
 *.db
 !stats_from_server.db.example
 *.log
+output.log
+vpn_monitor.log
+error.log
 
 # App Config
 config.json
 !config.json.example
 
-# SSH Keys
+# SSH Keys & Secrets
 *.pem
 *.key
 id_rsa
 id_ed25519
+*.secrets
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
 # Tests & Coverage
 .pytest_cache/

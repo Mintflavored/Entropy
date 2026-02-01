@@ -1,8 +1,14 @@
-PyQt6
+# UI Framework (PySide6 for QML)
+PySide6
+
+# Data & Network
 paramiko
 pandas
-pyqtgraph
+
+# Environment
 python-dotenv
+
+# AI Providers
 openai
 anthropic
 google-generativeai

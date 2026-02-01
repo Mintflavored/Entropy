@@ -9,11 +9,16 @@ class OpenAIAdapter:
             params["base_url"] = base_url
         self.client = OpenAI(**params)
 
-    def generate(self, model, messages, tools=None):
-        response = self.client.chat.completions.create(
-            model=model,
-            messages=messages,
-            tools=tools,
-            tool_choice="auto" if tools else None
-        )
+    def generate(self, model, messages, tools=None, json_mode=False):
+        params = {
+            "model": model,
+            "messages": messages,
+        }
+        if tools:
+            params["tools"] = tools
+            params["tool_choice"] = "auto"
+        if json_mode:
+            params["response_format"] = {"type": "json_object"}
+        
+        response = self.client.chat.completions.create(**params)
         return response.choices[0].message

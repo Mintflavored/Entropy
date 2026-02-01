@@ -21,7 +21,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest flake8 PyQt6 pyqtgraph # Добавляем PyQt6 для тестов
+        pip install pytest flake8 # PySide6 уже в requirements.txt
         
     - name: Lint with flake8
       run: |
@@ -32,8 +32,9 @@ jobs:
         
     - name: Test with pytest
       run: |
-        # Запуск тестов. Используем xvfb для имитации дисплея (нужно для PyQt)
-        sudo apt-get install -y libxcb-xinerama0
+        # Запуск тестов. Используем offscreen для PySide6/QML
+        sudo apt-get update
+        sudo apt-get install -y libxcb-xinerama0 libegl1
         export QT_QPA_PLATFORM=offscreen
         export PYTHONPATH=$PYTHONPATH:.
         python -m pytest

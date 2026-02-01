@@ -1,6 +1,12 @@
 import json
 import os
-from dotenv import load_dotenv
+
+# python-dotenv is optional (may not be bundled in PyInstaller)
+try:
+    from dotenv import load_dotenv
+    _HAS_DOTENV = True
+except ImportError:
+    _HAS_DOTENV = False
 
 class ConfigManager:
     """Управляет загрузкой и сохранением настроек приложения."""
@@ -22,15 +28,22 @@ class ConfigManager:
             "ai_model": "gpt-4o",
             "ai_base_url": "https://api.openai.com/v1",
             "ai_tool_limit": 5,
-            "language": "ru"
+            "language": "ru",
+            "eaii_enabled": False,
+            "eaii_provider": "openai_compatible",
+            "eaii_model": "gpt-4o-mini",
+            "eaii_base_url": "https://api.openai.com/v1",
+            "eaii_interval_min": 5
         }
         self.load()
 
     def load(self):
         """Загружает секреты из .env и настройки из config.json."""
-        load_dotenv()
+        if _HAS_DOTENV:
+            load_dotenv()
         self.secrets = {
             "ai_key": os.getenv("GLM_API_KEY", ""),
+            "eaii_key": os.getenv("EAII_API_KEY", ""),
             "ssh_key_path": os.getenv("VPN_SSH_KEY_PATH", "")
         }
 

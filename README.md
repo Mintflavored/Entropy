@@ -1,6 +1,6 @@
-# 🛡️ Entropy (v0.31.4)
+# 🛡️ Entropy (v0.33.0)
 
-[![Version](https://img.shields.io/badge/version-0.31.4-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
+[![Version](https://img.shields.io/badge/version-0.33.0-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-yellow.svg)](https://python.org)
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)]()
@@ -25,12 +25,14 @@
 - **Risk Index**: Smart algorithm for assessing blocking probability based on traffic volatility.
 
 #### 🧠 Artificial Intelligence (AI Bridge)
+- **EAII (Entropy AI Index)**: Autonomous monitoring with periodic analysis and response capabilities.
 - **Multi-Provider Support**: Integration with **OpenAI**, **Claude**, **Google Gemini**, and **OpenRouter**.
 - **Autonomous Diagnostics**: AI independently executes SSH commands to analyze logs and configs.
 - 🌐 **Multi-language**: Full support for Russian and English languages.
 - **Configurable Limits**: Control over AI SSH request count for security and token budgeting.
 
 #### 🛠️ System Capabilities
+- **EAII Settings UI**: Interface for configuring EAII parameters (interval, autostart, etc.).
 - **Live Probing Detection**: Parsing `/var/log/auth.log` to identify brute-force attempts.
 - **SSH Auto-Discovery**: Automatic detection of VPN panels and server hardware specs.
 - **Persistent Config**: All settings saved to `config.json`.
@@ -84,10 +86,8 @@ python main.py
 
 | Version | Changes |
 |---------|---------|
-| **v0.31.4** | **CI Permission Fix**: Added explicit write permissions for releases. |
-| **v0.31.3** | **Build Fix**: Added Pillow for automatic icon conversion. |
-| **v0.31.2** | **CI/CD Fix**: Included build spec in repository for automated releases. |
-| **v0.31.1** | **CI/CD**: Added GitHub Actions for automatic building and release. |
+| **v0.33.0** | **UI/UX Redesign**: Complete interface overhaul with modern design and improved usability. |
+| **v0.32.0** | **EAII (Entropy AI Index)**: Autonomous monitoring with the ability to periodically analyze and respond. |
 | **v0.31.0** | **Multi-language Support**: Added full Russian and English interface localization. |
 | **v0.30.0** | Transition to real-time data (PPS, Jitter, Logs). Removed simulations. Graph optimization. |
 | **v0.28.0** | Rebranded to **Entropy**, new logo, stable `ConfigManager`. |
@@ -113,12 +113,14 @@ python main.py
 - **Risk Index**: Умный алгоритм оценки вероятности блокировки на основе волатильности трафика.
 
 #### 🧠 Искусственный Интеллект (AI Bridge)
+- **EAII (Entropy AI Index)**: Автономный мониторинг с возможностью периодического анализа и реагирования.
 - **Multi-Provider Support**: Интеграция с **OpenAI**, **Claude**, **Google Gemini** и **OpenRouter**.
 - **Autonomous Diagnostics**: ИИ самостоятельно выполняет SSH-команды для анализа логов и конфигов.
 - 🌐 **Multi-language**: Полная поддержка русского и английского языков.
 - **Configurable Limits**: Контроль количества SSH-запросов ИИ для безопасности и экономии токенов.
 
 #### 🛠️ Системные Возможности
+- **EAII Settings UI**: Интерфейс для настройки параметров EAII (интервал, автозапуск и т. д.).
 - **Live Probing Detection**: Анализ `/var/log/auth.log` для выявления брутфорс-атак.
 - **SSH Auto-Discovery**: Автоматическое определение VPN-панелей и характеристик сервера.
 - **Persistent Config**: Все настройки сохраняются в `config.json`.
@@ -172,10 +174,8 @@ python main.py
 
 | Версия | Изменения |
 |--------|-----------|
-| **v0.31.4** | **CI Permission Fix**: Добавлены права записи для создания релиза. |
-| **v0.31.3** | **Build Fix**: Добавлена библиотека Pillow для конвертации иконки. |
-| **v0.31.2** | **CI/CD Fix**: Включено build spec в репозиторий для автоматических релизов. |
-| **v0.31.1** | **CI/CD**: Добавлены GitHub Actions для автоматической сборки и релиза. |
+| **v0.33.0** | **UI/UX Redesign**: Полный редизайн интерфейса с современным дизайном и улучшенной юзабилити. |
+| **v0.32.0** | **EAII (Entropy AI Index)**: Автономный мониторинг с возможностью периодического анализа и реагирования. |
 | **v0.31.0** | **Многоязычная поддержка**: Добавлена полная локализация на русский и английский языки. |
 | **v0.30.0** | Переход на реальные данные (PPS, Jitter, Logs). Удаление симуляции. Оптимизация графиков. |
 | **v0.28.0** | Ребрендинг в **Entropy**, новый логотип, стабильный `ConfigManager`. |

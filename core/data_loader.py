@@ -2,13 +2,13 @@ import paramiko
 import os
 import logging
 import time
-from PyQt6.QtCore import QThread, pyqtSignal
+from PySide6.QtCore import QThread, Signal
 
 logger = logging.getLogger(__name__)
 
 class DataLoader(QThread):
     """Поток для загрузки данных и выполнения авто-дискавери на сервере."""
-    finished = pyqtSignal(bool, str, dict, dict) # success, message, discovery, security
+    finished = Signal(bool, str, dict, dict) # success, message, discovery, security
 
     def __init__(self, config_manager):
         super().__init__()

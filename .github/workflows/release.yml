@@ -24,11 +24,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pyinstaller PyQt6 pyqtgraph Pillow
+        pip install pyinstaller
         
     - name: Build with PyInstaller
       run: |
-        pyinstaller entropy.spec
+        pyinstaller --name Entropy --windowed --onedir --add-data "resources;resources" --add-data "core;core" --add-data "ai;ai" --add-data "src;src" --hidden-import=paramiko --hidden-import=pandas --hidden-import=openai --hidden-import=anthropic --hidden-import=google.generativeai --hidden-import=dotenv src/main_qml.py
         
     - name: Bundle Server Scripts
       shell: pwsh
