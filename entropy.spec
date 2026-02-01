@@ -1,39 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-block_cipher = None
-
-# List of assets to include
-added_files = [
-    ('assets/logo.png', 'assets'),
-    ('.env.example', '.'),
-]
 
 a = Analysis(
-    ['main.py'],
+    ['src\\main_qml.py'],
     pathex=[],
     binaries=[],
-    datas=added_files,
-    hiddenimports=[
-        'openai',
-        'anthropic',
-        'google.generativeai',
-        'paramiko',
-        'pandas',
-        'pyqtgraph',
-        'PyQt6.QtCore',
-        'PyQt6.QtGui',
-        'PyQt6.QtWidgets',
-    ],
+    datas=[('resources', 'resources'), ('core', 'core'), ('ai', 'ai'), ('src', 'src')],
+    hiddenimports=['paramiko', 'pandas', 'openai', 'anthropic', 'google.generativeai', 'dotenv'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False,
+    optimize=0,
 )
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
@@ -51,12 +32,10 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='assets/logo.png', # Using PNG as icon works on some systems or can be converted
 )
 coll = COLLECT(
     exe,
     a.binaries,
-    a.zipfiles,
     a.datas,
     strip=False,
     upx=True,

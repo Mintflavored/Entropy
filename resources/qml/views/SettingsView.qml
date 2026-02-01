@@ -84,6 +84,83 @@ ScrollView {
                 }
             }
         }
+
+        // --- VPS CONNECTION SETTINGS ---
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 15
+            
+            Text { text: mainVM.trans.sec_vps_connection; color: "#8b949e"; font.pixelSize: 14; font.bold: true }
+            
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 280
+                color: Qt.rgba(22/255, 27/255, 34/255, 0.5)
+                radius: 12
+                border.color: "#30363d"
+                
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 25
+                    spacing: 15
+                    
+                    // IP & Port
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 20
+                        
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 5
+                            Text { text: mainVM.trans.lbl_vps_ip; color: "white"; font.pixelSize: 14 }
+                            StyledTextField {
+                                id: vpsIpField
+                                Layout.fillWidth: true
+                                text: mainVM.vpsIp
+                                placeholderText: "192.168.1.100"
+                            }
+                        }
+                        
+                        ColumnLayout {
+                            Layout.preferredWidth: 120
+                            Layout.minimumWidth: 100
+                            spacing: 5
+                            Text { text: mainVM.trans.lbl_vps_port; color: "white"; font.pixelSize: 14 }
+                            StyledTextField {
+                                id: vpsPortField
+                                Layout.fillWidth: true
+                                text: mainVM.vpsPort
+                                placeholderText: "22"
+                            }
+                        }
+                    }
+                    
+                    // User
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Text { text: mainVM.trans.lbl_vps_user; color: "white"; font.pixelSize: 14 }
+                        StyledTextField {
+                            id: vpsUserField
+                            Layout.fillWidth: true
+                            text: mainVM.vpsUser
+                            placeholderText: "root"
+                        }
+                    }
+                    
+                    // SSH Key Path
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Text { text: mainVM.trans.lbl_ssh_key_path; color: "white"; font.pixelSize: 14 }
+                        StyledTextField {
+                            id: sshKeyField
+                            Layout.fillWidth: true
+                            text: mainVM.sshKeyPath
+                            placeholderText: "C:\\Users\\...\\id_rsa"
+                        }
+                    }
+                }
+            }
+        }
         
         // --- INTERACTIVE AI (ANALYSIS TOOL) ---
         ColumnLayout {
@@ -272,7 +349,11 @@ ScrollView {
                     aiProviderCombo.currentText,
                     aiModelField.text,
                     aiUrlField.text,
-                    aiKeyField.text
+                    aiKeyField.text,
+                    vpsIpField.text,
+                    vpsPortField.text,
+                    vpsUserField.text,
+                    sshKeyField.text
                 )
             }
         }

@@ -72,6 +72,11 @@ class LocalizationManager(QObject):
             "lbl_ai_desc": "Глубокий анализ трафика и проактивная защита",
             "lbl_eaii_interval": "Интервал проверки EAII",
             "lbl_minutes": "мин",
+            "sec_vps_connection": "Подключение к VPS",
+            "lbl_vps_ip": "IP адрес сервера",
+            "lbl_vps_port": "SSH Порт",
+            "lbl_vps_user": "Пользователь",
+            "lbl_ssh_key_path": "Путь к SSH ключу",
             "btn_apply_all": "Применить все настройки",
             
             # Risks & Statuses
@@ -145,6 +150,11 @@ class LocalizationManager(QObject):
             "lbl_ai_desc": "Deep traffic analysis and proactive defense",
             "lbl_eaii_interval": "EAII Check Interval",
             "lbl_minutes": "min",
+            "sec_vps_connection": "VPS Connection",
+            "lbl_vps_ip": "Server IP Address",
+            "lbl_vps_port": "SSH Port",
+            "lbl_vps_user": "Username",
+            "lbl_ssh_key_path": "SSH Key Path",
             "btn_apply_all": "Apply & Persist All Settings",
 
             # Risks & Statuses

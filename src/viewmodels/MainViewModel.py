@@ -218,8 +218,27 @@ class MainViewModel(QObject):
     @Property(str, notify=settingsChanged)
     def aiApiKey(self): return self._cfg.ai_key
 
-    @Slot(bool, int, int, str, str, str, str, str, str, str, str, str)
-    def applySettings(self, eaii_enabled, interval, eaii_interval, lang, eaii_provider, eaii_model, eaii_url, eaii_key, ai_provider, ai_model, ai_url, ai_key):
+    # VPS Connection Settings
+    @Property(str, notify=settingsChanged)
+    def vpsIp(self): return self._cfg.get("ip", "127.0.0.1")
+    
+    @Property(str, notify=settingsChanged)
+    def vpsPort(self): return str(self._cfg.get("port", 22))
+    
+    @Property(str, notify=settingsChanged)
+    def vpsUser(self): return self._cfg.get("user", "root")
+    
+    @Property(str, notify=settingsChanged)
+    def sshKeyPath(self): return self._cfg.get("key_path", "")
+
+    @Slot(bool, int, int, str, str, str, str, str, str, str, str, str, str, str, str, str)
+    def applySettings(self, eaii_enabled, interval, eaii_interval, lang, eaii_provider, eaii_model, eaii_url, eaii_key, ai_provider, ai_model, ai_url, ai_key, vps_ip, vps_port, vps_user, ssh_key):
+        # VPS Connection
+        self._cfg.set("ip", vps_ip)
+        self._cfg.set("port", int(vps_port) if vps_port.isdigit() else 22)
+        self._cfg.set("user", vps_user)
+        self._cfg.set("key_path", ssh_key)
+        
         # Background AI (EAII)
         self._cfg.set("eaii_enabled", eaii_enabled)
         self._cfg.set("sync_interval_ms", interval)
