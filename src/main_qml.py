@@ -6,6 +6,28 @@ import sqlite3
 import pandas as pd
 import time
 import logging
+
+# --- PYINSTALLER FROZEN PATH DETECTION ---
+if getattr(sys, 'frozen', False):
+    # Running as bundled exe
+    BASE_PATH = sys._MEIPASS
+    # Log to file for debugging
+    logging.basicConfig(
+        level=logging.INFO,
+        filename=os.path.join(os.path.dirname(sys.executable), 'entropy.log'),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+else:
+    # Running from source
+    BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger("DataBridge")
+
+# Add paths for imports
+sys.path.insert(0, BASE_PATH)
+sys.path.insert(0, os.path.join(BASE_PATH, 'src'))
+
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QTimer, Qt, QObject
@@ -13,20 +35,12 @@ from PySide6.QtQuickControls2 import QQuickStyle
 
 # --- OPTIMIZATION FOR WINDOWS ---
 os.environ["QSG_RHI_BACKEND"] = "opengl"
-# QGuiApplication.setAttribute(Qt.AA_EnableHighDpiScaling) # Deprecated in Qt6
-# QGuiApplication.setAttribute(Qt.AA_UseHighDpiPixmaps) # Deprecated in Qt6
 
-# Import Core
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-sys.path.append(os.path.dirname(__file__))  # Add src folder itself
 from core.config import ConfigManager
 from core.data_loader import DataLoader
 from core.security_engine import SecurityEngine
 from ai.bridge import EAIIWorker, AIAnalyzer
 from viewmodels.MainViewModel import MainViewModel
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("DataBridge")
 
 class DataBridge(QObject):
     def __init__(self, cfg, main_vm):
@@ -185,7 +199,7 @@ def main():
     app = QGuiApplication(sys.argv)
     
     # Set application icon (shows in taskbar and window)
-    icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../resources/assets/logo.png"))
+    icon_path = os.path.join(BASE_PATH, "resources", "assets", "logo.png")
     app.setWindowIcon(QIcon(icon_path))
     
     engine = QQmlApplicationEngine()
@@ -202,7 +216,7 @@ def main():
             except UnicodeEncodeError: pass
     engine.warnings.connect(on_warnings)
     
-    qml_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../resources/qml/Main.qml"))
+    qml_path = os.path.join(BASE_PATH, "resources", "qml", "Main.qml")
     engine.load("file:///" + qml_path.replace("\\", "/"))
     
     if not engine.rootObjects():
