@@ -9,11 +9,11 @@ jobs:
   release:
     runs-on: windows-latest
     permissions:
-      contents: write # Необходим для создания релиза
+      contents: write
     steps:
     - uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # Нужно для получения сообщений тегов
+        fetch-depth: 0
     
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -24,11 +24,19 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pyinstaller
+        pip install pyinstaller pillow
+        
+    - name: Convert PNG to ICO
+      shell: python
+      run: |
+        from PIL import Image
+        img = Image.open('assets/logo.png')
+        img.save('assets/logo.ico', format='ICO', sizes=[(256, 256), (128, 128), (64, 64), (48, 48), (32, 32), (16, 16)])
+        print('Created assets/logo.ico')
         
     - name: Build with PyInstaller
       run: |
-        pyinstaller --name Entropy --windowed --onedir --add-data "resources;resources" --add-data "core;core" --add-data "ai;ai" --add-data "src;src" --hidden-import=paramiko --hidden-import=pandas --hidden-import=openai --hidden-import=anthropic --hidden-import=google.generativeai --hidden-import=dotenv src/main_qml.py
+        pyinstaller --name Entropy --windowed --onedir --icon=assets/logo.ico --add-data "resources;resources" --add-data "core;core" --add-data "ai;ai" --add-data "src;src" --hidden-import=paramiko --hidden-import=pandas --hidden-import=openai --hidden-import=anthropic --hidden-import=google.generativeai --hidden-import=dotenv src/main_qml.py
         
     - name: Bundle Server Scripts
       shell: pwsh
@@ -36,25 +44,37 @@ jobs:
         New-Item -ItemType Directory -Force -Path "dist/Entropy/server"
         Copy-Item -Path "scripts/server/*" -Destination "dist/Entropy/server/" -Recurse
         
-    - name: Create Zip Archive
+    - name: Install Inno Setup
       shell: pwsh
       run: |
-        Compress-Archive -Path "dist/Entropy/*" -DestinationPath "Entropy-Full-Bundle-${{ github.ref_name }}.zip"
+        choco install innosetup -y
+        
+    - name: Update version in ISS
+      shell: pwsh
+      run: |
+        $version = "${{ github.ref_name }}".TrimStart('v')
+        (Get-Content installer/entropy.iss) -replace 'MyAppVersion "0.33.0"', "MyAppVersion `"$version`"" | Set-Content installer/entropy.iss
+        
+    - name: Build Installer
+      shell: pwsh
+      run: |
+        & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer/entropy.iss
+        
+    - name: Create Zip Archive (Portable)
+      shell: pwsh
+      run: |
+        Compress-Archive -Path "dist/Entropy/*" -DestinationPath "Entropy-Portable-${{ github.ref_name }}.zip"
         
     - name: Extract Release Notes
       id: release_notes
       shell: bash
       run: |
         if [ -f "RELEASE_NOTES.md" ]; then
-          echo "Reading from RELEASE_NOTES.md"
-          # Читаем файл и экранируем спецсимволы для GitHub Output
           CONTENT=$(cat RELEASE_NOTES.md)
-          # Используем EOF для многострочного вывода
           echo "body<<EOF" >> $GITHUB_OUTPUT
           echo "$CONTENT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         else
-          echo "Reading from Tag Message"
           TAG_MSG=$(git tag -l --format='%(contents:body)' ${{ github.ref_name }})
           if [ -z "$TAG_MSG" ]; then
             TAG_MSG="Automatic release for version ${{ github.ref_name }}"
@@ -67,7 +87,9 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
-        files: Entropy-Full-Bundle-*.zip
+        files: |
+          installer_output/Entropy-Setup-*.exe
+          Entropy-Portable-*.zip
         body: ${{ steps.release_notes.outputs.body }}
         draft: false
         prerelease: false
