@@ -11,10 +11,12 @@ import logging
 if getattr(sys, 'frozen', False):
     # Running as bundled exe
     BASE_PATH = sys._MEIPASS
-    # Log to file for debugging
+    # Log to user's AppData folder (writable without admin)
+    log_dir = os.path.join(os.environ.get('APPDATA', os.path.expanduser('~')), 'Entropy')
+    os.makedirs(log_dir, exist_ok=True)
     logging.basicConfig(
         level=logging.INFO,
-        filename=os.path.join(os.path.dirname(sys.executable), 'entropy.log'),
+        filename=os.path.join(log_dir, 'entropy.log'),
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
 else:
