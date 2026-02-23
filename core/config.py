@@ -55,6 +55,8 @@ class ConfigManager:
                     # Если в конфиге есть ключ, он приоритетнее .env
                     if "ai_key" in saved_settings:
                         self.secrets["ai_key"] = saved_settings["ai_key"]
+                    if "eaii_key" in saved_settings:
+                        self.secrets["eaii_key"] = saved_settings["eaii_key"]
             except Exception as e:
                 print(f"Ошибка загрузки config.json: {e}")
         
@@ -96,3 +98,7 @@ class ConfigManager:
     @property
     def ai_key(self):
         return self.secrets.get("ai_key", "")
+
+    @property
+    def eaii_key(self):
+        return self.secrets.get("eaii_key", "")
