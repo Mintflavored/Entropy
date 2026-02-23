@@ -171,7 +171,7 @@ ScrollView {
             
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 380
+                Layout.preferredHeight: 480
                 color: Qt.rgba(22/255, 27/255, 34/255, 0.5)
                 radius: 12
                 border.color: "#30363d"
@@ -180,6 +180,18 @@ ScrollView {
                     anchors.fill: parent
                     anchors.margins: 25
                     spacing: 20
+                    
+                    // EAIS Toggle
+                    RowLayout {
+                        ColumnLayout {
+                            Text { text: mainVM.trans.lbl_enable_eais; color: "white"; font.bold: true; font.pixelSize: 16 }
+                            Text { text: mainVM.trans.lbl_eais_desc; color: "#8b949e"; font.pixelSize: 13 }
+                        }
+                        Item { Layout.fillWidth: true }
+                        StyledSwitch { id: eaisSwitch; checked: mainVM.eaisEnabled }
+                    }
+                    
+                    Rectangle { Layout.fillWidth: true; height: 1; color: "#30363d" }
                     
                     // Provider
                     ColumnLayout {
@@ -353,7 +365,8 @@ ScrollView {
                     vpsIpField.text,
                     vpsPortField.text,
                     vpsUserField.text,
-                    sshKeyField.text
+                    sshKeyField.text,
+                    eaisSwitch.checked
                 )
             }
         }

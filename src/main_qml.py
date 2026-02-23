@@ -40,21 +40,26 @@ os.environ["QSG_RHI_BACKEND"] = "opengl"
 
 from core.config import ConfigManager
 from core.data_loader import DataLoader
+from core.ssh_manager import SSHConnectionManager
 from core.security_engine import SecurityEngine
 from ai.bridge import EAIIWorker, AIAnalyzer
 from viewmodels.MainViewModel import MainViewModel
+from viewmodels.SandboxViewModel import SandboxViewModel
 
 class DataBridge(QObject):
-    def __init__(self, cfg, main_vm):
+    def __init__(self, cfg, main_vm, ssh_manager):
         super().__init__()
         self.cfg = cfg
         self.vm = main_vm
+        self.ssh = ssh_manager  # Persistent SSH connection
         self.loader = None
         self.eaii_worker = None
         self.ai_analyzer = None
         self.last_raw_packets = None
         self.last_metrics = {}
         self.discovery_data = {}
+        self._discovery_done = False
+        self._last_server_ip = None
         
         # Connect manual trigger to Interactive Deep Scan
         self.vm.manualScanRequested.connect(self.run_interactive_analysis)
@@ -81,9 +86,18 @@ class DataBridge(QObject):
     def request_data(self):
         if self.loader and self.loader.isRunning():
             return
-        self.loader = DataLoader(self.cfg)
+        
+        # Проверяем нужно ли запускать discovery
+        current_ip = self.cfg.get("ip")
+        need_discovery = not self._discovery_done or current_ip != self._last_server_ip
+        
+        self.loader = DataLoader(self.ssh, self.cfg, skip_discovery=not need_discovery)
         self.loader.finished.connect(self.on_data_ready)
         self.loader.start()
+        
+        # Обновляем состояние после запуска
+        if need_discovery:
+            self._last_server_ip = current_ip
 
     def run_eaii(self):
         if not self.cfg.get("eaii_enabled", True): return
@@ -124,8 +138,12 @@ class DataBridge(QObject):
         if not success:
             logger.error(f"Sync fail: {message}")
             return
-            
-        self.discovery_data = discovery or {}
+        
+        # Обновляем discovery только если данные есть (не пропустили)
+        if discovery:
+            self.discovery_data = discovery
+            self._discovery_done = True  # Помечаем discovery как выполненный
+        
         current_pps = 0
         current_jitter = 0.0
         probing_count = 0
@@ -207,10 +225,14 @@ def main():
     engine = QQmlApplicationEngine()
     
     cfg = ConfigManager(config_path="config.json")
+    ssh_manager = SSHConnectionManager(cfg)  # SSH для DataBridge (sync)
+    ssh_sandbox = SSHConnectionManager(cfg)  # Отдельное SSH для EAIS (sandbox)
     main_vm = MainViewModel(None, SecurityEngine, cfg)
-    bridge = DataBridge(cfg, main_vm)
+    sandbox_vm = SandboxViewModel(ssh_sandbox, cfg)
+    bridge = DataBridge(cfg, main_vm, ssh_manager)
     
     engine.rootContext().setContextProperty("mainVM", main_vm)
+    engine.rootContext().setContextProperty("sandboxVM", sandbox_vm)
     
     def on_warnings(warnings):
         for w in warnings:

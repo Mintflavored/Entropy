@@ -14,6 +14,7 @@ class LocalizationManager(QObject):
             "nav_dashboard": "Дашборд",
             "nav_security": "Безопасность",
             "nav_ai": "AI Анализ",
+            "nav_sandbox": "AI Песочница",
             "nav_settings": "Настройки",
 
             # Dashboard
@@ -64,6 +65,8 @@ class LocalizationManager(QObject):
             "lbl_sync_interval": "Интервал синхронизации",
             "sec_interactive_ai": "Интерактивный AI Аналитик",
             "sec_background_ai": "Фоновый AI Анализ (EAII)",
+            "lbl_enable_eais": "Включить EAIS",
+            "lbl_eais_desc": "Entropy AI Sandbox — автооптимизация VPN конфигурации",
             "lbl_ai_provider": "AI Провайдер",
             "lbl_model_name": "Название модели",
             "lbl_base_url": "Базовый URL (API)",
@@ -92,6 +95,7 @@ class LocalizationManager(QObject):
             "nav_dashboard": "Dashboard",
             "nav_security": "Security",
             "nav_ai": "AI Insights",
+            "nav_sandbox": "AI Sandbox",
             "nav_settings": "Settings",
 
             # Dashboard
@@ -142,6 +146,8 @@ class LocalizationManager(QObject):
             "lbl_sync_interval": "Sync Interval",
             "sec_interactive_ai": "Interactive AI Analyzer",
             "sec_background_ai": "Background AI Analyzer (EAII)",
+            "lbl_enable_eais": "Enable EAIS",
+            "lbl_eais_desc": "Entropy AI Sandbox — auto-optimize VPN configuration",
             "lbl_ai_provider": "AI Provider",
             "lbl_model_name": "Model Name",
             "lbl_base_url": "Base URL",

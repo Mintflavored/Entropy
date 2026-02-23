@@ -218,6 +218,10 @@ class MainViewModel(QObject):
     @Property(str, notify=settingsChanged)
     def aiApiKey(self): return self._cfg.ai_key
 
+    # EAIS (Entropy AI Sandbox) Settings
+    @Property(bool, notify=settingsChanged)
+    def eaisEnabled(self): return self._cfg.get("eais_enabled", False)
+
     # VPS Connection Settings
     @Property(str, notify=settingsChanged)
     def vpsIp(self): return self._cfg.get("ip", "127.0.0.1")
@@ -231,8 +235,8 @@ class MainViewModel(QObject):
     @Property(str, notify=settingsChanged)
     def sshKeyPath(self): return self._cfg.get("key_path", "")
 
-    @Slot(bool, int, int, str, str, str, str, str, str, str, str, str, str, str, str, str)
-    def applySettings(self, eaii_enabled, interval, eaii_interval, lang, eaii_provider, eaii_model, eaii_url, eaii_key, ai_provider, ai_model, ai_url, ai_key, vps_ip, vps_port, vps_user, ssh_key):
+    @Slot(bool, int, int, str, str, str, str, str, str, str, str, str, str, str, str, str, bool)
+    def applySettings(self, eaii_enabled, interval, eaii_interval, lang, eaii_provider, eaii_model, eaii_url, eaii_key, ai_provider, ai_model, ai_url, ai_key, vps_ip, vps_port, vps_user, ssh_key, eais_enabled):
         # VPS Connection
         self._cfg.set("ip", vps_ip)
         self._cfg.set("port", int(vps_port) if vps_port.isdigit() else 22)
@@ -256,6 +260,9 @@ class MainViewModel(QObject):
         self._cfg.set("ai_base_url", ai_url)
         self._cfg.secrets["ai_key"] = ai_key
         self._cfg.settings["ai_key"] = ai_key
+        
+        # EAIS (Entropy AI Sandbox)
+        self._cfg.set("eais_enabled", eais_enabled)
         
         self._cfg.save()
         self.settingsChanged.emit()
