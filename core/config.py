@@ -59,8 +59,11 @@ class ConfigManager:
                 print(f"Ошибка загрузки config.json: {e}")
         
         # Переопределяем путь к ключу, если он есть в .env и не задан в конфиге
-        if self.secrets["ssh_key_path"] and not self.settings.get("key_path"):
-            self.settings["key_path"] = self.secrets["ssh_key_path"]
+        default_key_path = "path/to/key"
+        if self.secrets.get("ssh_key_path"):
+            current_key = self.settings.get("key_path")
+            if not current_key or current_key == default_key_path:
+                self.settings["key_path"] = self.secrets["ssh_key_path"]
 
     def save(self):
         """Сохраняет текущие настройки в config.json."""

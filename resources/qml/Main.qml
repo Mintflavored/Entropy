@@ -10,7 +10,7 @@ Window {
     visible: true
     width: 1240
     height: 850
-    title: "Entropy v0.33.0 (QML)"
+    title: "Entropy v0.33.8 (QML)"
     color: "#0a0f14"
 
     property string currentView: "Dashboard"
@@ -28,8 +28,9 @@ Window {
             currentIndex: {
                 if (currentView === "Dashboard") return 0;
                 if (currentView === "AI") return 1;
-                if (currentView === "Security") return 2;
-                if (currentView === "Settings") return 3;
+                if (currentView === "Sandbox") return 2;
+                if (currentView === "Security") return 3;
+                if (currentView === "Settings") return 4;
                 return 0;
             }
 
@@ -44,13 +45,18 @@ Window {
                 Behavior on opacity { NumberAnimation { duration: 300 } }
                 layer.enabled: true
             }
-            SecurityView {
+            SandboxView {
                 opacity: mainStack.currentIndex === 2 ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: 300 } }
                 layer.enabled: true
             }
-            SettingsView {
+            SecurityView {
                 opacity: mainStack.currentIndex === 3 ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 300 } }
+                layer.enabled: true
+            }
+            SettingsView {
+                opacity: mainStack.currentIndex === 4 ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: 300 } }
                 layer.enabled: true
             }
