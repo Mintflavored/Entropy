@@ -203,7 +203,7 @@ class MainViewModel(QObject):
     def eaiiBaseUrl(self): return self._cfg.get("eaii_base_url", "https://api.openai.com/v1")
     
     @Property(str, notify=settingsChanged)
-    def eaiiApiKey(self): return self._cfg.get("eaii_key", "")
+    def eaiiApiKey(self): return self._cfg.eaii_key
 
     # Main/Interactive AI Settings
     @Property(str, notify=settingsChanged)
@@ -248,6 +248,8 @@ class MainViewModel(QObject):
         self._cfg.set("eaii_provider", eaii_provider)
         self._cfg.set("eaii_model", eaii_model)
         self._cfg.set("eaii_base_url", eaii_url)
+        self._cfg.set("eaii_base_url", eaii_url)
+        self._cfg.secrets["eaii_key"] = eaii_key
         self._cfg.settings["eaii_key"] = eaii_key
         
         # Interactive AI
