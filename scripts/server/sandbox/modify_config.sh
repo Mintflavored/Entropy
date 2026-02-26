@@ -28,8 +28,16 @@ show_usage() {
     echo "  mtu           - MTU size (1280-1500)"
     echo "  buffer_size   - Buffer size in KB"
     echo "  congestion    - Congestion algorithm (bbr, cubic)"
+    echo "  fq_pacing     - BBR FQ Pacing (true/false)"
+    echo "  tcp_notsent_lowat - TCP window size in bytes"
+    echo "  tcp_fastopen  - TCP Fast Open (0/1/2/3)"
+    echo "  tcp_ecn       - TCP ECN (0/1/2)"
+    echo "  tcp_slow_start_after_idle - TCP slow start after idle (0/1)"
     echo "  dest          - REALITY destination (domain:port)"
     echo "  short_id      - REALITY short ID"
+    echo "  utls          - uTLS fingerprint (chrome, firefox, randomized)"
+    echo "  smux          - MUX multiplexing (true/false)"
+    echo "  dns_strategy  - DNS Query Strategy (UseIP, UseIPv4)"
     echo ""
     echo "Examples:"
     echo "  $0 mtu 1400"
@@ -72,6 +80,36 @@ case "$PARAM" in
         ip netns exec sandbox-net sysctl -w net.ipv4.tcp_congestion_control="$VALUE"
         log_info "Congestion control set to $VALUE"
         ;;
+        
+    fq_pacing)
+        if [ "$VALUE" == "true" ]; then
+            ip netns exec sandbox-net tc qdisc replace dev veth-sandbox root fq pacing
+            log_info "FQ pacing enabled"
+        else
+            ip netns exec sandbox-net tc qdisc replace dev veth-sandbox root pfifo_fast
+            log_info "FQ pacing disabled (pfifo_fast applied)"
+        fi
+        ;;
+        
+    tcp_notsent_lowat)
+        ip netns exec sandbox-net sysctl -w net.ipv4.tcp_notsent_lowat="$VALUE"
+        log_info "tcp_notsent_lowat set to $VALUE"
+        ;;
+        
+    tcp_fastopen)
+        ip netns exec sandbox-net sysctl -w net.ipv4.tcp_fastopen="$VALUE"
+        log_info "tcp_fastopen set to $VALUE"
+        ;;
+        
+    tcp_ecn)
+        ip netns exec sandbox-net sysctl -w net.ipv4.tcp_ecn="$VALUE"
+        log_info "tcp_ecn set to $VALUE"
+        ;;
+        
+    tcp_slow_start_after_idle)
+        ip netns exec sandbox-net sysctl -w net.ipv4.tcp_slow_start_after_idle="$VALUE"
+        log_info "tcp_slow_start_after_idle set to $VALUE"
+        ;;
     
     dest)
         # Modify REALITY destination in config
@@ -93,6 +131,36 @@ case "$PARAM" in
                '.inbounds[0].streamSettings.realitySettings.shortIds = [$sid]' \
                "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
             log_info "REALITY short_id set to $VALUE"
+        fi
+        ;;
+        
+    utls)
+        if [ -f "$CONFIG_FILE" ]; then
+            jq --arg fp "$VALUE" \
+               '.inbounds[0].streamSettings.realitySettings.fingerprint = $fp' \
+               "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+            log_info "uTLS fingerprint set to $VALUE"
+        fi
+        ;;
+        
+    smux)
+        if [ -f "$CONFIG_FILE" ]; then
+            if [ "$VALUE" == "true" ]; then
+                jq '.inbounds[0].streamSettings.mux.enabled = true' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp"
+            else
+                jq '.inbounds[0].streamSettings.mux.enabled = false' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp"
+            fi
+            mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+            log_info "S-Mux enabled: $VALUE"
+        fi
+        ;;
+        
+    dns_strategy)
+        if [ -f "$CONFIG_FILE" ]; then
+            jq --arg qstrat "$VALUE" \
+               '.dns.queryStrategy = $qstrat' \
+               "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+            log_info "DNS queryStrategy set to $VALUE"
         fi
         ;;
     

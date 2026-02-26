@@ -35,14 +35,22 @@ EAIS_SYSTEM_PROMPT = """Ты — EAIS (Entropy AI Sandbox), продвинуты
 # ДОСТУПНЫЕ ПАРАМЕТРЫ (tool: apply_config)
 Ты можешь менять следующие параметры через конфигурацию эксперимента:
 
-## Сетевые параметры
-- **mtu**: MTU размер пакета (1500, 1420, 1360, 1280). Влияет на фрагментацию и пропускную способность.
-- **congestion**: Алгоритм контроля перегрузки TCP (bbr, cubic). BBR лучше для высоколатентных каналов, Cubic — для стабильных.
-- **buffer_size**: Размер сетевого буфера в KB (64, 128, 256, 512, 1024). Больше буфер = больше throughput, но больше latency и bufferbloat.
+## Сетевые параметры (Kernel & TCP)
+- **mtu**: MTU размер пакета (1500, 1420, 1360, 1280). Влияет на фрагментацию.
+- **congestion**: Алгоритм контроля перегрузки (bbr, cubic). BBR лучше для высоколатентных каналов.
+- **buffer_size**: Размер сетевого буфера в KB (64, 128, 256, 512, 1024). Больше = выше throughput, но растет bufferbloat.
+- **fq_pacing**: BBR pacing (true, false). Сглаживает трафик, снижает burst-нагрузки, помогает против DPI эвристик.
+- **tcp_notsent_lowat**: TCP window size (bytes, например 131072, 262144). Помогает радикально снизить Upload Bufferbloat.
+- **tcp_fastopen**: (0, 1, 2, 3). Ускоряет Handshake, но пакеты с данными в SYN могут дропаться DPI.
+- **tcp_ecn**: Explicit Congestion Notification (0, 1, 2). Спасает TCP Retrans (если поддерживается на маршруте) или убивает скорость.
+- **tcp_slow_start_after_idle**: Сброс окна после простоя (0, 1). Отключение (0) полезно для серфинга и мессенджеров.
 
-## Параметры VPN/REALITY
-- **dest**: REALITY destination — домен для маскировки (google.com:443, microsoft.com:443, etc). Влияет на проходимость через DPI.
-- **short_id**: REALITY short ID — идентификатор для REALITY протокола.
+## Параметры Stealth, VPN и Xray
+- **dest**: REALITY destination (домен: google.com:443, microsoft.com:443). Влияет на пинг и скрытность.
+- **short_id**: REALITY short ID.
+- **utls**: uTLS fingerprint (chrome, firefox, safari, randomized). Скрывает, что это VPN, маскируя под браузер.
+- **smux**: Xray Muxing (true, false). Мультиплексирование снижает TLS/TCP Handshake, но часто блочится DPI-провайдерами.
+- **dns_strategy**: Стратегия DNS (UseIP, UseIPv4). Влияет на задержку DNS-запросов (dns_ms).
 
 # ИНСТРУМЕНТЫ
 
@@ -64,7 +72,7 @@ EAIS_SYSTEM_PROMPT = """Ты — EAIS (Entropy AI Sandbox), продвинуты
 {
     "reasoning": "Подробное обоснование выбора...",
     "action": "apply_config" | "ssh_command" | "finish",
-    "config": {"mtu": 1400, "congestion": "bbr"},
+    "config": {"mtu": 1400, "congestion": "bbr", "tcp_fastopen": 3, "utls": "randomized"},
     "ssh_command": "sysctl net.ipv4.tcp_congestion_control",
     "should_continue": true,
     "summary": "Краткий статус оптимизации"

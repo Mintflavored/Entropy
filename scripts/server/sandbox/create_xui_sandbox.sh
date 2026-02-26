@@ -97,6 +97,9 @@ cat > "$SANDBOX_XUI_DIR/config.json" << EOF
             "statsOutboundUplink": true,
             "statsOutboundDownlink": true
         }
+    },
+    "dns": {
+        "queryStrategy": "UseIP"
     }
 }
 EOF
@@ -151,7 +154,12 @@ cat > "$SANDBOX_XUI_DIR/vless-reality-template.json" << 'EOF'
                     "xver": 0,
                     "serverNames": ["www.google.com"],
                     "privateKey": "SANDBOX_PRIVATE_KEY",
-                    "shortIds": ["abcd1234"]
+                    "shortIds": ["abcd1234"],
+                    "fingerprint": "chrome"
+                },
+                "mux": {
+                    "enabled": false,
+                    "concurrency": 8
                 }
             },
             "sniffing": {
@@ -165,7 +173,11 @@ cat > "$SANDBOX_XUI_DIR/vless-reality-template.json" << 'EOF'
             "protocol": "freedom",
             "tag": "direct"
         }
-    ]
+    ],
+    "dns": {
+        "queryStrategy": "UseIP",
+        "servers": ["1.1.1.1", "8.8.8.8"]
+    }
 }
 EOF
 
