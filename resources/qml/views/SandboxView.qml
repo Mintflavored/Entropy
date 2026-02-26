@@ -43,7 +43,7 @@ ScrollView {
             Layout.fillWidth: true
             
             Text {
-                text: "🧪 AI Sandbox"
+                text: mainVM.trans.title_sandbox_view
                 color: "#e6edf3"
                 font.pixelSize: 28
                 font.bold: true
@@ -75,7 +75,7 @@ ScrollView {
         
         // Description
         Text {
-            text: "AI автоматически тестирует различные настройки VPN в изолированной среде и находит оптимальную конфигурацию"
+            text: mainVM.trans.eais_desc
             color: "#8b949e"
             font.pixelSize: 13
             wrapMode: Text.Wrap
@@ -98,7 +98,7 @@ ScrollView {
                 
                 RowLayout {
                     Text { 
-                        text: "Прогресс экспериментов" 
+                        text: mainVM.trans.eais_progress 
                         color: "white" 
                         font.bold: true 
                         font.pixelSize: 16 
@@ -133,7 +133,7 @@ ScrollView {
                     spacing: 15
                     
                     StyledButton {
-                        text: sandboxView.isRunning ? "⏹ Остановить" : "▶ Запустить оптимизацию"
+                        text: sandboxView.isRunning ? mainVM.trans.btn_stop : mainVM.trans.btn_start_opt
                         Layout.preferredWidth: 220
                         Layout.preferredHeight: 40
                         enabled: sandboxView.vmReady
@@ -177,7 +177,7 @@ ScrollView {
                 spacing: 20
                 
                 Text { 
-                    text: "🏆 Лучший результат" 
+                    text: mainVM.trans.title_best_result 
                     color: "white" 
                     font.bold: true 
                     font.pixelSize: 16 
@@ -188,7 +188,7 @@ ScrollView {
                     spacing: 30
                     
                     ColumnLayout {
-                        Text { text: "Baseline"; color: "#8b949e"; font.pixelSize: 12 }
+                        Text { text: mainVM.trans.lbl_baseline; color: "#8b949e"; font.pixelSize: 12 }
                         Text { 
                             text: sandboxView.baselineScore.toFixed(1) 
                             color: "#8b949e" 
@@ -204,7 +204,7 @@ ScrollView {
                     }
                     
                     ColumnLayout {
-                        Text { text: "Оптимизировано"; color: "#8b949e"; font.pixelSize: 12 }
+                        Text { text: mainVM.trans.lbl_optimized; color: "#8b949e"; font.pixelSize: 12 }
                         Text { 
                             text: sandboxView.bestScore.toFixed(1) 
                             color: "#3fb950" 
@@ -236,7 +236,7 @@ ScrollView {
                 Rectangle { Layout.fillWidth: true; height: 1; color: "#30363d" }
                 
                 // Best config
-                Text { text: "Рекомендуемая конфигурация:"; color: "#8b949e"; font.pixelSize: 13 }
+                Text { text: mainVM.trans.lbl_rec_config; color: "#8b949e"; font.pixelSize: 13 }
                 
                 Rectangle {
                     Layout.fillWidth: true
@@ -262,7 +262,7 @@ ScrollView {
                     Item { Layout.fillWidth: true }
                     
                     StyledButton {
-                        text: "Применить к Production"
+                        text: mainVM.trans.btn_apply_prod
                         Layout.preferredWidth: 220
                         Layout.preferredHeight: 40
                         enabled: sandboxView.improvement > 0 && !sandboxView.isRunning && sandboxView.vmReady
@@ -290,18 +290,14 @@ ScrollView {
                 spacing: 10
                 
                 Text { 
-                    text: "ℹ️ Как это работает" 
+                    text: mainVM.trans.title_how_it_works 
                     color: "#8b949e" 
                     font.bold: true 
                     font.pixelSize: 14 
                 }
                 
                 Text {
-                    text: "1. AI создаёт изолированную копию VPN (sandbox)\n" +
-                          "2. Тестирует различные параметры (MTU, buffer, congestion)\n" +
-                          "3. Генерирует реальный трафик и измеряет метрики\n" +
-                          "4. Находит оптимальную конфигурацию\n" +
-                          "5. Предлагает применить к production (с вашего подтверждения)"
+                    text: mainVM.trans.desc_how_it_works
                     color: "#6e7681"
                     font.pixelSize: 12
                     lineHeight: 1.4
@@ -315,14 +311,14 @@ ScrollView {
     // Confirmation dialog
     Dialog {
         id: applyConfirmDialog
-        title: "Применить конфигурацию?"
+        title: mainVM.trans.dialog_apply_title
         modal: true
         x: (sandboxView.width - width) / 2
         y: (sandboxView.height - height) / 2
         width: 400
         
         contentItem: Text {
-            text: "Вы уверены что хотите применить найденную\nконфигурацию к production VPN?\n\nЭто изменит настройки сервера."
+            text: mainVM.trans.dialog_apply_desc
             color: "#e6edf3"
             font.pixelSize: 14
         }

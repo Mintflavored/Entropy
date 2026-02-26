@@ -6,6 +6,7 @@ Entropy AI Sandbox - ViewModel for QML UI
 import json
 import logging
 from PySide6.QtCore import QObject, Signal, Property, Slot, QThread
+from core.localization import L
 
 logger = logging.getLogger("SandboxViewModel")
 
@@ -37,7 +38,7 @@ class SandboxWorker(QThread):
                 recommendation = self.agent.get_recommendation()
                 self.optimization_finished.emit(recommendation)
             else:
-                self.error_occurred.emit("Оптимизация завершилась без результата")
+                self.error_occurred.emit(L.tr("sb_err_no_opt"))
             
         except Exception as e:
             logger.error(f"Sandbox worker error: {e}")
@@ -63,7 +64,7 @@ class SandboxViewModel(QObject):
         self._baseline_score = 0.0
         self._improvement = 0.0
         self._best_config = {}
-        self._status_text = "Готово к запуску"
+        self._status_text = L.tr("sb_stat_ready")
         self._error = ""
         self._ai_reasoning = ""
         
@@ -134,26 +135,26 @@ class SandboxViewModel(QObject):
         
         # Проверяем что EAIS включён
         if self._cfg and not self._cfg.get("eais_enabled", False):
-            self._error = "EAIS отключён. Включите в Настройках → Интерактивный AI Аналитик"
-            self._status_text = "EAIS отключён"
+            self._error = L.tr("sb_err_off")
+            self._status_text = L.tr("sb_stat_off")
             self.statusChanged.emit()
             return
         
         # Проверяем SSH
         if not self._ssh:
-            self._error = "SSH не подключён"
+            self._error = L.tr("sb_err_ssh")
             self.statusChanged.emit()
             return
         
         # Проверяем AI ключ
         if self._cfg and not self._cfg.ai_key:
-            self._error = "API ключ не настроен"
+            self._error = L.tr("sb_err_key")
             self.statusChanged.emit()
             return
         
         self._is_running = True
         self._error = ""
-        self._status_text = "Инициализация EAIS..."
+        self._status_text = L.tr("sb_stat_init")
         self.statusChanged.emit()
         
         agent = self._get_agent()
@@ -169,18 +170,18 @@ class SandboxViewModel(QObject):
         if self._agent:
             self._agent.stop()
         self._is_running = False
-        self._status_text = "Остановлено пользователем"
+        self._status_text = L.tr("sb_stat_stopped")
         self._agent = None  # Сброс агента для пересоздания при следующем запуске
         self.statusChanged.emit()
     
     @Slot()
     def applyBestConfig(self):
         if not self._best_config:
-            self._error = "Нет результатов для применения"
+            self._error = L.tr("sb_err_no_res")
             self.statusChanged.emit()
             return
         logger.info(f"Applying best config: {self._best_config}")
-        self._status_text = "Конфигурация готова к применению"
+        self._status_text = L.tr("sb_stat_ready_apply")
         self.statusChanged.emit()
     
     # --- Callbacks ---
@@ -205,7 +206,7 @@ class SandboxViewModel(QObject):
             self._improvement = recommendation.get("improvement_pct", 0)
             self._best_config = recommendation.get("config", {})
             self._ai_reasoning = recommendation.get("ai_reasoning", "")
-            self._status_text = f"Готово! Улучшение: {self._improvement:.1f}%"
+            self._status_text = L.tr("sb_stat_done").format(imp=self._improvement)
         
         self.statusChanged.emit()
         self.resultsChanged.emit()
@@ -214,7 +215,7 @@ class SandboxViewModel(QObject):
     def _on_error(self, error: str):
         self._is_running = False
         self._error = error
-        self._status_text = "Ошибка"
+        self._status_text = L.tr("sb_stat_err")
         self.statusChanged.emit()
         self._cleanup_worker()
     
