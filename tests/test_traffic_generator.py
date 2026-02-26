@@ -81,15 +81,31 @@ def test_upload_speed(generator, mock_ssh):
     assert res.success
     assert res.value == 10.0 # (1250000 * 8) / 1000000
 
-def test_bufferbloat(generator, mock_ssh):
+def test_load_telemetry(generator, mock_ssh):
     # idle -> load
     mock_ssh.exec_command.side_effect = [
         (True, "time=10.0\ntime=10.0"), # idle
-        (True, "time=50.0\ntime=50.0"),  # load
+        (True, "time=50.0\ntime=50.0\nretrans:0/5\nretrans:2\nbacklog 1000b 12p")  # load
     ]
-    res = generator.test_bufferbloat()
+    res = generator.test_load_telemetry()
+    assert res["bufferbloat"].success
+    assert res["bufferbloat"].value == 40.0 # 50 - 10
+    assert res["tcp_retrans"].success
+    assert res["tcp_retrans"].value == 7.0 # 5 + 2
+    assert res["tc_backlog"].success
+    assert res["tc_backlog"].value == 12.0
+
+def test_mtr(generator, mock_ssh):
+    mock_ssh.exec_command.return_value = (True, "HOST: node\n  1.|-- 10.0.0.1  0.0%  10  200.5\n  2.|-- 10.0.0.2  0.0%  10  10.0\n")
+    res = generator.test_mtr()
     assert res.success
-    assert res.value == 40.0 # 50 - 10
+    assert res.value == 1.0 # 200.5 > 150.0 gets anomalous
+
+def test_xray_stats(generator, mock_ssh):
+    mock_ssh.exec_command.return_value = (True, '{"stat": [{"name": "inbound>>>api>>>drop", "value": "5"}, {"name": "outbound>>>app>>>error", "value": "2"}]}')
+    res = generator.test_xray_stats()
+    assert res.success
+    assert res.value == 7.0
 
 def test_run_full_test(generator):
     generator.test_connection_timing = MagicMock(return_value={"latency": TrafficTestResult("l", True, 10.0, "ms", 0)})
@@ -98,7 +114,13 @@ def test_run_full_test(generator):
     generator.test_packet_loss = MagicMock(return_value=TrafficTestResult("p", True, 0.0, "%", 0))
     generator.test_download_and_stability = MagicMock(return_value={"download": TrafficTestResult("dl", True, 100, "Mbps", 0), "stability": TrafficTestResult("s", True, 0, "%cv", 0)})
     generator.test_upload_speed = MagicMock(return_value=TrafficTestResult("up", True, 50, "Mbps", 0))
-    generator.test_bufferbloat = MagicMock(return_value=TrafficTestResult("b", True, 5.0, "ms", 0))
+    generator.test_load_telemetry = MagicMock(return_value={
+        "bufferbloat": TrafficTestResult("b", True, 5.0, "ms", 0),
+        "tcp_retrans": TrafficTestResult("tr", True, 0.0, "packets", 0),
+        "tc_backlog": TrafficTestResult("tb", True, 2.0, "packets", 0)
+    })
+    generator.test_mtr = MagicMock(return_value=TrafficTestResult("mtr", True, 0.0, "bool", 0))
+    generator.test_xray_stats = MagicMock(return_value=TrafficTestResult("xs", True, 0.0, "count", 0))
     
     results = generator.run_full_test()
     summary = generator.get_summary(results)
@@ -107,3 +129,4 @@ def test_run_full_test(generator):
     assert summary["dns_ms"] == 5.0
     assert summary["download_mbps"] == 100.0
     assert summary["upload_mbps"] == 50.0
+    assert summary["tc_backlog"] == 2.0

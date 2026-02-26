@@ -36,6 +36,10 @@ class ExperimentResult:
     tls_handshake_ms: float = 0.0
     bufferbloat_ms: float = 0.0
     stability_cv: float = 0.0
+    tcp_retrans: float = 0.0
+    tc_backlog: float = 0.0
+    isp_anomaly: float = 0.0
+    xray_drops: float = 0.0
     ai_reasoning: str = ""
     
     @property
@@ -51,6 +55,10 @@ class ExperimentResult:
             "tls_handshake_ms": self.tls_handshake_ms,
             "bufferbloat_ms": self.bufferbloat_ms,
             "stability_cv": self.stability_cv,
+            "tcp_retrans": self.tcp_retrans,
+            "tc_backlog": self.tc_backlog,
+            "isp_anomaly": self.isp_anomaly,
+            "xray_drops": self.xray_drops,
         }
 
 
@@ -85,7 +93,11 @@ class MetricsStorage:
                     tcp_handshake_ms REAL DEFAULT 0,
                     tls_handshake_ms REAL DEFAULT 0,
                     bufferbloat_ms REAL DEFAULT 0,
-                    stability_cv REAL DEFAULT 0
+                    stability_cv REAL DEFAULT 0,
+                    tcp_retrans REAL DEFAULT 0,
+                    tc_backlog REAL DEFAULT 0,
+                    isp_anomaly REAL DEFAULT 0,
+                    xray_drops REAL DEFAULT 0
                 )
             """)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_score ON experiments(score DESC)")
@@ -99,6 +111,10 @@ class MetricsStorage:
                 "tls_handshake_ms": "REAL DEFAULT 0",
                 "bufferbloat_ms": "REAL DEFAULT 0",
                 "stability_cv": "REAL DEFAULT 0",
+                "tcp_retrans": "REAL DEFAULT 0",
+                "tc_backlog": "REAL DEFAULT 0",
+                "isp_anomaly": "REAL DEFAULT 0",
+                "xray_drops": "REAL DEFAULT 0",
             }
             for col, col_type in new_columns.items():
                 if col not in existing:
@@ -114,15 +130,17 @@ class MetricsStorage:
                 INSERT INTO experiments 
                 (timestamp, config, latency_ms, download_mbps, jitter_ms, 
                  packet_loss_pct, dns_ms, cpu_usage, memory_mb, score, ai_reasoning,
-                 upload_mbps, tcp_handshake_ms, tls_handshake_ms, bufferbloat_ms, stability_cv)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 upload_mbps, tcp_handshake_ms, tls_handshake_ms, bufferbloat_ms, stability_cv,
+                 tcp_retrans, tc_backlog, isp_anomaly, xray_drops)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 result.timestamp, json.dumps(result.config),
                 result.latency_ms, result.download_mbps, result.jitter_ms,
                 result.packet_loss_pct, result.dns_ms, result.cpu_usage,
                 result.memory_mb, result.score, result.ai_reasoning,
                 result.upload_mbps, result.tcp_handshake_ms, result.tls_handshake_ms,
-                result.bufferbloat_ms, result.stability_cv
+                result.bufferbloat_ms, result.stability_cv,
+                result.tcp_retrans, result.tc_backlog, result.isp_anomaly, result.xray_drops
             ))
             conn.commit()
             return cursor.lastrowid
@@ -173,6 +191,10 @@ class MetricsStorage:
             tls_handshake_ms=row["tls_handshake_ms"] or 0,
             bufferbloat_ms=row["bufferbloat_ms"] or 0,
             stability_cv=row["stability_cv"] or 0,
+            tcp_retrans=row["tcp_retrans"] or 0,
+            tc_backlog=row["tc_backlog"] or 0,
+            isp_anomaly=row["isp_anomaly"] or 0,
+            xray_drops=row["xray_drops"] or 0,
             ai_reasoning=row["ai_reasoning"] or ""
         )
     

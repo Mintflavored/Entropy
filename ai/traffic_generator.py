@@ -252,26 +252,92 @@ class RemoteTrafficGenerator:
         
         return TrafficTestResult("upload", False, 0.0, "Mbps", duration, "Upload test failed")
     
-    def test_bufferbloat(self) -> TrafficTestResult:
-        """Быстрый тест: короткий флуд канала и пинг"""
+    def test_load_telemetry(self) -> Dict[str, TrafficTestResult]:
+        """Тест Bufferbloat + TCP Retransmissions + tc backlog под нагрузкой"""
         ok_idle, idle_output = self._sandbox_exec("ping -c 5 -i 0.1 8.8.8.8", timeout=5)
         idle_rtts = [float(t) for t in re.findall(r'time=(\d+\.?\d*)', idle_output)] if ok_idle else []
         idle_avg = sum(idle_rtts) / len(idle_rtts) if idle_rtts else 0
         
+        start = time.time()
         ok_loaded, loaded_output = self._sandbox_exec(
             "wget -O /dev/null http://speedtest.tele2.net/10MB.zip >/dev/null 2>&1 & "
-            "sleep 0.1 && ping -c 10 -i 0.2 8.8.8.8; kill %1 2>/dev/null",
-            timeout=20
+            "sleep 1; ping -c 10 -i 0.2 8.8.8.8; "
+            "ss -i -n -t state established; "
+            "tc -s qdisc show dev veth-sandbox; "
+            "kill %1 2>/dev/null",
+            timeout=25
         )
+        duration = (time.time() - start) * 1000
         
+        # Parse Bufferbloat
         loaded_rtts = [float(t) for t in re.findall(r'time=(\d+\.?\d*)', loaded_output)] if ok_loaded else []
         loaded_avg = sum(loaded_rtts) / len(loaded_rtts) if loaded_rtts else 0
+        bloat_ms = max(0.0, loaded_avg - idle_avg) if (idle_avg > 0 and loaded_avg > 0) else 0.0
         
-        if idle_avg > 0 and loaded_avg > 0:
-            bloat = max(0.0, loaded_avg - idle_avg)
-            return TrafficTestResult("bufferbloat", True, round(bloat, 2), "ms", 0)
-        
-        return TrafficTestResult("bufferbloat", False, 0.0, "ms", 0, "Bufferbloat failed")
+        # Parse TCP Retransmissions
+        # Format ss: `retrans:0/1` or `retrans:1`
+        retrans_total = 0
+        retrans_matches = re.finditer(r'retrans:\d*/?(\d+)', loaded_output)
+        for m in retrans_matches:
+            retrans_total += int(m.group(1))
+            
+        # Parse tc backlog (packets or bytes)
+        # Format tc: `backlog 1000b 2p` => 2 packets
+        backlog_p = 0
+        backlog_match = re.search(r'backlog\s+\d+[bB]\s+(\d+)[pP]', loaded_output)
+        if backlog_match:
+            backlog_p = int(backlog_match.group(1))
+            
+        return {
+            "bufferbloat": TrafficTestResult(
+                "bufferbloat", (idle_avg > 0 and loaded_avg > 0), round(bloat_ms, 2), "ms", duration
+            ),
+            "tcp_retrans": TrafficTestResult(
+                "tcp_retrans", ok_loaded, float(retrans_total), "packets", 0
+            ),
+            "tc_backlog": TrafficTestResult(
+                "tc_backlog", ok_loaded, float(backlog_p), "packets", 0
+            )
+        }
+    
+    def test_mtr(self) -> TrafficTestResult:
+        """Geo-routing and ISP anomaly check"""
+        ok, output = self._ssh_exec("mtr -c 1 -n -r 8.8.8.8", timeout=15)
+        isp_anomaly = 0.0
+        if ok:
+            # Парсим задержки на первых 3х хопах. 
+            lines = output.strip().split('\n')
+            for line in lines[1:4]: # Пропускаем header
+                match = re.search(r'\d+\.\|--\s+\S+\s+[\d\.]+%[ \t]+\d+[ \t]+([\d\.]+)', line)
+                if match:
+                    try:
+                        ping_ms = float(match.group(1))
+                        if ping_ms > 150.0: # Если на первых хопах провайдера огромный пинг
+                            isp_anomaly = 1.0
+                    except ValueError:
+                        pass
+            return TrafficTestResult("isp_anomaly", True, isp_anomaly, "bool", 0)
+        return TrafficTestResult("isp_anomaly", False, 0.0, "bool", 0)
+    
+    def test_xray_stats(self) -> TrafficTestResult:
+        """Сбор Xray Telemetry (Drop Rate и Errors)"""
+        ok, output = self._sandbox_exec(
+            "/opt/entropy-sandbox/x-ui/bin/xray api statsquery -server=127.0.0.1:10085",
+            timeout=10
+        )
+        drops = 0.0
+        if ok and '"stat"' in output:
+            try:
+                import json
+                data = json.loads(output)
+                stats = data.get("stat", [])
+                for s in stats:
+                    if s.get("name", "").endswith("drop") or s.get("name", "").endswith("error"):
+                        drops += float(s.get("value", 0))
+                return TrafficTestResult("xray_drops", True, drops, "count", 0)
+            except Exception:
+                pass
+        return TrafficTestResult("xray_drops", False, 0.0, "count", 0)
     
     # ── Orchestrator (Параллельный запуск) ────────────────────────────────
     
@@ -297,18 +363,20 @@ class RemoteTrafficGenerator:
             return res
         
         def run_group_b() -> Dict[str, TrafficTestResult]:
-            # Sandbox: Ping'и (очень малый вес)
+            # Sandbox: Ping'и + Geo-routing
             return {
                 "jitter": self.test_jitter(),
-                "packet_loss": self.test_packet_loss()
+                "packet_loss": self.test_packet_loss(),
+                "isp_anomaly": self.test_mtr()
             }
         
         def run_group_c() -> Dict[str, TrafficTestResult]:
-            # Sandbox: Ширина канала (строго последовательно внутри группы)
+            # Sandbox: Ширина канала + Telemetry
             res = {}
             res.update(self.test_download_and_stability())
             res["upload"] = self.test_upload_speed()
-            res["bufferbloat"] = self.test_bufferbloat()
+            res.update(self.test_load_telemetry())
+            res["xray_drops"] = self.test_xray_stats()
             return res
         
         # Запускаем группы параллельно
@@ -333,7 +401,11 @@ class RemoteTrafficGenerator:
             "download": results.get("download", TrafficTestResult("download", False, 0, "Mbps", 0)),
             "upload": results.get("upload", TrafficTestResult("upload", False, 0, "Mbps", 0)),
             "bufferbloat": results.get("bufferbloat", TrafficTestResult("bufferbloat", False, 0, "ms", 0)),
-            "stability": results.get("stability", TrafficTestResult("stability", False, 0, "%cv", 0))
+            "stability": results.get("stability", TrafficTestResult("stability", False, 0, "%cv", 0)),
+            "tcp_retrans": results.get("tcp_retrans", TrafficTestResult("tcp_retrans", False, 0, "packets", 0)),
+            "tc_backlog": results.get("tc_backlog", TrafficTestResult("tc_backlog", False, 0, "packets", 0)),
+            "isp_anomaly": results.get("isp_anomaly", TrafficTestResult("isp_anomaly", False, 0, "bool", 0)),
+            "xray_drops": results.get("xray_drops", TrafficTestResult("xray_drops", False, 0, "count", 0)),
         }
     
     @staticmethod
@@ -354,4 +426,8 @@ class RemoteTrafficGenerator:
             "tls_handshake_ms": val("tls_handshake"),
             "bufferbloat_ms": val("bufferbloat"),
             "stability_cv": val("stability"),
+            "tcp_retrans": val("tcp_retrans"),
+            "tc_backlog": val("tc_backlog"),
+            "isp_anomaly": val("isp_anomaly"),
+            "xray_drops": val("xray_drops"),
         }

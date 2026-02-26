@@ -94,10 +94,16 @@ EAIS_SYSTEM_PROMPT = """Ты — EAIS (Entropy AI Sandbox), продвинуты
 ## Продвинутые (наиболее информативные для VPN)
 - **TCP Handshake** (ms): Время установки TCP-соединения. Чувствителен к congestion и MTU.
 - **TLS Handshake** (ms): Время TLS/SSL handshake. Критично для REALITY-протокола. Зависит от congestion, MTU, dest.
-- **Bufferbloat** (ms): Рост latency ПОД НАГРУЗКОЙ (download). Главный индикатор качества QoS. Сильно зависит от buffer_size и congestion (BBR vs Cubic).
+- **Bufferbloat** (ms): Рост latency ПОД НАГРУЗКОЙ. Главный индикатор качества QoS.
 - **Stability** (%CV): Коэффициент вариации скорости (3 замера). Ниже = стабильнее.
 
-⚠️ ОБРАТИ ВНИМАНИЕ: Bufferbloat и TLS Handshake имеют наибольший вес в score (по 15%). Именно эти метрики лучше всего различают конфигурации на быстрых серверах.
+## Новая Телеметрия (Глубокий анализ)
+- **TCP Retrans** (packets): Количество повторно отправленных TCP-пакетов под нагрузкой. Показывает нестабильность канала. 0 = идеально.
+- **TC Backlog** (packets): Размер очереди на сетевом интерфейсе под нагрузкой. Высокое значение = плохой buffer_size/MTU.
+- **Xray Drops** (count): Внутренние ошибки/дропы ядра Xray. Выше 0 = плохой конфиг (например, неверный REALITY dest).
+- **ISP Anomaly** (bool 1/0): Если 1.0, это значит, что пинг до провайдера внезапно подскочил (внешняя проблема).
+
+⚠️ ОБРАТИ ВНИМАНИЕ: Используй новые метрики телеметрии для понимания узких мест. Если высокая скорость, но огромный TCP Retrans / TC Backlog, значит конфиг "грязный" (Cubic + большой буфер).
 """
 
 
@@ -377,6 +383,10 @@ class EAISAgent:
             tls_handshake_ms=final_summary.get("tls_handshake_ms", 0),
             bufferbloat_ms=final_summary.get("bufferbloat_ms", 0),
             stability_cv=final_summary.get("stability_cv", 0),
+            tcp_retrans=final_summary.get("tcp_retrans", 0),
+            tc_backlog=final_summary.get("tc_backlog", 0),
+            isp_anomaly=final_summary.get("isp_anomaly", 0),
+            xray_drops=final_summary.get("xray_drops", 0),
             ai_reasoning=ai_reasoning
         )
         
@@ -497,11 +507,15 @@ class EAISAgent:
 - Jitter: {baseline.jitter_ms} ms
 - Packet Loss: {baseline.packet_loss_pct}%
 - DNS: {baseline.dns_ms} ms
-### Продвинутые
+### Продвинутые и Телеметрия
 - TCP Handshake: {baseline.tcp_handshake_ms} ms
 - TLS Handshake: {baseline.tls_handshake_ms} ms
 - Bufferbloat: {baseline.bufferbloat_ms} ms
 - Stability: {baseline.stability_cv}% CV
+- TCP Retrans: {baseline.tcp_retrans} pkts
+- TC Backlog: {baseline.tc_backlog} pkts
+- ISP Anomaly: {baseline.isp_anomaly}
+- Xray Drops: {baseline.xray_drops} errs
 
 Проанализируй контекст и предложи первое действие. Ты можешь:
 1. Выполнить SSH-команду для дополнительной диагностики (action: "ssh_command")
@@ -585,11 +599,15 @@ class EAISAgent:
 - Jitter: {result.jitter_ms} ms (baseline: {baseline.jitter_ms})
 - Packet Loss: {result.packet_loss_pct}% (baseline: {baseline.packet_loss_pct})
 - DNS: {result.dns_ms} ms (baseline: {baseline.dns_ms})
-### Продвинутые метрики
+### Продвинутые метрики и Телеметрия
 - TCP Handshake: {result.tcp_handshake_ms} ms (baseline: {baseline.tcp_handshake_ms})
 - TLS Handshake: {result.tls_handshake_ms} ms (baseline: {baseline.tls_handshake_ms})
 - Bufferbloat: {result.bufferbloat_ms} ms (baseline: {baseline.bufferbloat_ms})
 - Stability: {result.stability_cv}% CV (baseline: {baseline.stability_cv})
+- TCP Retrans: {result.tcp_retrans} pkts (baseline: {baseline.tcp_retrans})
+- TC Backlog: {result.tc_backlog} pkts (baseline: {baseline.tc_backlog})
+- ISP Anomaly: {result.isp_anomaly} (baseline: {baseline.isp_anomaly})
+- Xray Drops: {result.xray_drops} errs (baseline: {baseline.xray_drops})
 
 Осталось экспериментов: {max_experiments - experiment_idx}/{max_experiments}. SSH запросов: {self._max_ssh_calls - self._ssh_calls_used}/{self._max_ssh_calls}.
 Предложи следующее действие."""})

@@ -34,10 +34,8 @@ if [ ! -f /sys/fs/cgroup/cgroup.controllers ]; then
 fi
 
 # Install required tools
-if ! command -v aria2c &> /dev/null; then
-    log_info "Installing aria2 for bandwidth testing..."
-    apt-get update && apt-get install -y aria2 || log_warn "Failed to install aria2, tests will use wget fallback"
-fi
+log_info "Installing required tools (aria2, jq, mtr-tiny)..."
+apt-get update -y && apt-get install -y aria2 jq mtr-tiny || log_warn "Failed to install some tools (aria2, jq, mtr-tiny)"
 
 log_info "Setting up AI Sandbox isolation..."
 

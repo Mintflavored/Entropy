@@ -61,7 +61,27 @@ cat > "$SANDBOX_XUI_DIR/config.json" << EOF
     },
     "api": {
         "tag": "api",
-        "services": ["StatsService"]
+        "services": ["StatsService", "LoggerService"]
+    },
+    "inbounds": [
+        {
+            "listen": "127.0.0.1",
+            "port": 10085,
+            "protocol": "dokodemo-door",
+            "settings": {
+                "address": "127.0.0.1"
+            },
+            "tag": "api"
+        }
+    ],
+    "routing": {
+        "rules": [
+            {
+                "inboundTag": ["api"],
+                "outboundTag": "api",
+                "type": "field"
+            }
+        ]
     },
     "stats": {},
     "policy": {
