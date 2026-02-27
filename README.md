@@ -1,6 +1,6 @@
-# 🛡️ Entropy (v0.33.0)
+# 🛡️ Entropy (v0.42.4)
 
-[![Version](https://img.shields.io/badge/version-0.33.0-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
+[![Version](https://img.shields.io/badge/version-0.42.4-blue.svg)](https://github.com/Mintflavored/Entropy/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-yellow.svg)](https://python.org)
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)]()
@@ -86,8 +86,9 @@ python main.py
 
 | Version | Changes |
 |---------|---------|
+| **v0.42.0** | **Creation and implementation of the module EAIS (Entropy Artificial Intelligence Sandbox)**: Introduced the Entropy Artificial Intelligence Sandbox (EAIS) for autonomous VPN configuration testing. Features parallel processing, batch config dispatching, Fast-Fail checks, dynamic payload generation, and deep TCP/kernel tuning (BBR pacing, notsent_lowat). |
 | **v0.33.0** | **UI/UX Redesign**: Complete interface overhaul with modern design and improved usability. |
-| **v0.32.0** | **EAII (Entropy AI Index)**: Autonomous monitoring with the ability to periodically analyze and respond. |
+| **v0.32.0** | **EAII (Entropy Artificial Intelligence Index)**: Autonomous monitoring with the ability to periodically analyze and respond. |
 | **v0.31.0** | **Multi-language Support**: Added full Russian and English interface localization. |
 | **v0.30.0** | Transition to real-time data (PPS, Jitter, Logs). Removed simulations. Graph optimization. |
 | **v0.28.0** | Rebranded to **Entropy**, new logo, stable `ConfigManager`. |
@@ -174,8 +175,9 @@ python main.py
 
 | Версия | Изменения |
 |--------|-----------|
+| **v0.42.0** | **Создание и внедрение модуля EAIS (Entropy Artificial Intelligence Sandbox)**: Автономная ИИ-песочница для подбора VPN-конфигураций. Внедрено распараллеливание запросов, Batch-применение SSH конфигов, Fast-Fail пинги и умное изменение размеров тестов на слабых каналах. Открыт доступ к параметрам ядра TCP. |
 | **v0.33.0** | **UI/UX Redesign**: Полный редизайн интерфейса с современным дизайном и улучшенной юзабилити. |
-| **v0.32.0** | **EAII (Entropy AI Index)**: Автономный мониторинг с возможностью периодического анализа и реагирования. |
+| **v0.32.0** | **EAII (Entropy Artificial Intelligence Index)**: Автономный мониторинг с возможностью периодического анализа и реагирования. |
 | **v0.31.0** | **Многоязычная поддержка**: Добавлена полная локализация на русский и английский языки. |
 | **v0.30.0** | Переход на реальные данные (PPS, Jitter, Logs). Удаление симуляции. Оптимизация графиков. |
 | **v0.28.0** | Ребрендинг в **Entropy**, новый логотип, стабильный `ConfigManager`. |

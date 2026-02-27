@@ -192,6 +192,9 @@ class DataBridge(QObject):
                         "ip": "N/A", # IP is not directly in this table
                         "traffic": f"{round(row['d'] + row['u'], 2)} MB"
                     })
+        except sqlite3.OperationalError:
+            # Table might not exist yet if loader just started
+            pass
         except Exception as e:
             logger.error(f"DB Error: {e}")
 

@@ -10,7 +10,7 @@ Window {
     visible: true
     width: 1240
     height: 850
-    title: "Entropy v0.33.8 (QML)"
+    title: "Entropy v0.42.4 (QML)"
     color: "#0a0f14"
 
     property string currentView: "Dashboard"
