@@ -62,6 +62,7 @@ Item {
                 model: [
                     { id: "Dashboard", icon: "▤", label: mainVM.trans.nav_dashboard },
                     { id: "AI", icon: "✧", label: mainVM.trans.nav_ai },
+                    { id: "Sandbox", icon: "🧪", label: mainVM.trans.nav_sandbox },
                     { id: "Security", icon: "⬢", label: mainVM.trans.nav_security },
                     { id: "Settings", icon: "⚙", label: mainVM.trans.nav_settings }
                 ]

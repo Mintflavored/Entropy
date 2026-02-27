@@ -14,6 +14,7 @@ class LocalizationManager(QObject):
             "nav_dashboard": "Дашборд",
             "nav_security": "Безопасность",
             "nav_ai": "AI Анализ",
+            "nav_sandbox": "AI Песочница",
             "nav_settings": "Настройки",
 
             # Dashboard
@@ -64,6 +65,8 @@ class LocalizationManager(QObject):
             "lbl_sync_interval": "Интервал синхронизации",
             "sec_interactive_ai": "Интерактивный AI Аналитик",
             "sec_background_ai": "Фоновый AI Анализ (EAII)",
+            "lbl_enable_eais": "Включить EAIS",
+            "lbl_eais_desc": "Entropy AI Sandbox — автооптимизация VPN конфигурации",
             "lbl_ai_provider": "AI Провайдер",
             "lbl_model_name": "Название модели",
             "lbl_base_url": "Базовый URL (API)",
@@ -85,13 +88,43 @@ class LocalizationManager(QObject):
             "risk_high": "ВЫСОКИЙ",
             "risk_critical": "КРИТИЧЕСКИЙ",
             "status_init": "Инициализация...",
-            "status_sync": "Синхронизация..."
+            "status_sync": "Синхронизация...",
+
+            # Sandbox / EAIS
+            "title_sandbox_view": "🧪 AI Sandbox",
+            "eais_status_loading": "Загрузка...",
+            "eais_desc": "AI автоматически тестирует различные настройки VPN в изолированной среде и находит оптимальную конфигурацию",
+            "eais_progress": "Прогресс экспериментов",
+            "btn_stop": "⏹ Остановить",
+            "btn_start_opt": "▶ Запустить оптимизацию",
+            "title_best_result": "🏆 Лучший результат",
+            "lbl_baseline": "Baseline",
+            "lbl_optimized": "Оптимизировано",
+            "lbl_rec_config": "Рекомендуемая конфигурация:",
+            "btn_apply_prod": "Применить к Production",
+            "title_how_it_works": "ℹ️ Как это работает",
+            "desc_how_it_works": "1. AI создаёт изолированную копию VPN (sandbox)\n2. Тестирует различные параметры (MTU, buffer, congestion)\n3. Генерирует реальный трафик и измеряет метрики\n4. Находит оптимальную конфигурацию\n5. Предлагает применить к production (с вашего подтверждения)",
+            "dialog_apply_title": "Применить конфигурацию?",
+            "dialog_apply_desc": "Вы уверены что хотите применить найденную\nконфигурацию к production VPN?\n\nЭто изменит настройки сервера.",
+            "sb_stat_ready": "Готово к запуску",
+            "sb_err_off": "EAIS отключён. Включите в Настройках → Интерактивный AI Аналитик",
+            "sb_stat_off": "EAIS отключён",
+            "sb_err_ssh": "SSH не подключён",
+            "sb_err_key": "API ключ не настроен",
+            "sb_stat_init": "Инициализация EAIS...",
+            "sb_stat_stopped": "Остановлено пользователем",
+            "sb_err_no_res": "Нет результатов для применения",
+            "sb_stat_ready_apply": "Конфигурация готова к применению",
+            "sb_stat_err": "Ошибка",
+            "sb_err_no_opt": "Оптимизация завершилась без результата",
+            "sb_stat_done": "Готово! Улучшение: {imp:.1f}%"
         },
         "en": {
             # Navigation
             "nav_dashboard": "Dashboard",
             "nav_security": "Security",
             "nav_ai": "AI Insights",
+            "nav_sandbox": "AI Sandbox",
             "nav_settings": "Settings",
 
             # Dashboard
@@ -142,6 +175,8 @@ class LocalizationManager(QObject):
             "lbl_sync_interval": "Sync Interval",
             "sec_interactive_ai": "Interactive AI Analyzer",
             "sec_background_ai": "Background AI Analyzer (EAII)",
+            "lbl_enable_eais": "Enable EAIS",
+            "lbl_eais_desc": "Entropy AI Sandbox — auto-optimize VPN configuration",
             "lbl_ai_provider": "AI Provider",
             "lbl_model_name": "Model Name",
             "lbl_base_url": "Base URL",
@@ -163,7 +198,36 @@ class LocalizationManager(QObject):
             "risk_high": "HIGH",
             "risk_critical": "CRITICAL",
             "status_init": "Initializing...",
-            "status_sync": "Synchronizing..."
+            "status_sync": "Synchronizing...",
+
+            # Sandbox / EAIS
+            "title_sandbox_view": "🧪 AI Sandbox",
+            "eais_status_loading": "Loading...",
+            "eais_desc": "AI automatically tests various VPN settings in an isolated environment to find the optimal configuration",
+            "eais_progress": "Experiment Progress",
+            "btn_stop": "⏹ Stop",
+            "btn_start_opt": "▶ Start Optimization",
+            "title_best_result": "🏆 Best Result",
+            "lbl_baseline": "Baseline",
+            "lbl_optimized": "Optimized",
+            "lbl_rec_config": "Recommended Configuration:",
+            "btn_apply_prod": "Apply to Production",
+            "title_how_it_works": "ℹ️ How it works",
+            "desc_how_it_works": "1. AI creates an isolated VPN copy (sandbox)\n2. Tests various parameters (MTU, buffer, congestion)\n3. Generates real traffic and metrics\n4. Finds the optimal configuration\n5. Suggests applying to production (upon confirmation)",
+            "dialog_apply_title": "Apply configuration?",
+            "dialog_apply_desc": "Are you sure you want to apply the found\nconfiguration to the production VPN?\n\nThis will change server settings.",
+            "sb_stat_ready": "Ready to start",
+            "sb_err_off": "EAIS is disabled. Enable it in Settings → Interactive AI Analyzer",
+            "sb_stat_off": "EAIS disabled",
+            "sb_err_ssh": "SSH is not connected",
+            "sb_err_key": "API key is not configured",
+            "sb_stat_init": "Initializing EAIS...",
+            "sb_stat_stopped": "Stopped by user",
+            "sb_err_no_res": "No results to apply",
+            "sb_stat_ready_apply": "Configuration is ready to be applied",
+            "sb_stat_err": "Error",
+            "sb_err_no_opt": "Optimization finished without a result",
+            "sb_stat_done": "Done! Improvement: {imp:.1f}%"
         }
     }
 
