@@ -157,16 +157,17 @@ class RemoteTrafficGenerator:
     
     # ── Group C (Тяжелая сеть Sandbox: Download, Upload, Bufferbloat) ────────
     
-    def test_download_and_stability(self) -> Dict[str, TrafficTestResult]:
+    def test_download_and_stability(self, fast_mode: bool = False) -> Dict[str, TrafficTestResult]:
         """
-        Комбайн: Скачивает 5MB в 16 потоков через aria2c,
+        Комбайн: Скачивает 10MB (или 3MB в fast_mode) в 16 потоков через aria2c,
         парсит прогресс для вычисления скорости и Stability (CV).
         """
         start = time.time()
+        file_size = "3MB" if fast_mode else "10MB"
         # aria2c позволяет выжать весь канал за милисекунды (16 conn)
         ok, output = self._sandbox_exec(
-            "aria2c -x 16 -s 16 -d /tmp -o test_dl.zip --summary-interval=1 http://speedtest.tele2.net/10MB.zip 2>&1; rm -f /tmp/test_dl.zip",
-            timeout=30
+            f"aria2c -x 16 -s 16 -d /tmp -o test_dl.zip --summary-interval=1 http://speedtest.tele2.net/{file_size}.zip 2>&1; rm -f /tmp/test_dl.zip",
+            timeout=20 if fast_mode else 30
         )
         duration = (time.time() - start) * 1000
         res = {"download": None, "stability": None}
@@ -201,10 +202,10 @@ class RemoteTrafficGenerator:
             else:
                 res["stability"] = TrafficTestResult("stability", True, 0.0, "%cv", 0)
         else:
-            # Фоллбэк на wget (однопоток 5MB) если aria2c нет в системе
+            # Фоллбэк на wget (однопоток 10MB/3MB) если aria2c нет в системе
             ok_w, out_w = self._sandbox_exec(
-                "wget -O /dev/null http://speedtest.tele2.net/10MB.zip 2>&1 | tail -1",
-                timeout=30
+                f"wget -O /dev/null http://speedtest.tele2.net/{file_size}.zip 2>&1 | tail -1",
+                timeout=20 if fast_mode else 30
             )
             duration_w = (time.time() - start) * 1000
             if ok_w and duration_w > 0:
@@ -216,8 +217,9 @@ class RemoteTrafficGenerator:
                     res["download"] = TrafficTestResult("download", True, round(speed_mbps, 2), "Mbps", duration_w)
                     res["stability"] = TrafficTestResult("stability", False, 0.0, "%cv", 0, "Fallback used")
                 else:
-                    # Ручной рассчёт скорости 10MB / время
-                    speed_mbps = (10.0 * 8) / (duration_w / 1000)
+                    # Ручной рассчёт скорости
+                    size_mb = 3.0 if fast_mode else 10.0
+                    speed_mbps = (size_mb * 8) / (duration_w / 1000)
                     res["download"] = TrafficTestResult("download", True, round(speed_mbps, 2), "Mbps", duration_w)
                     res["stability"] = TrafficTestResult("stability", False, 0.0, "%cv", 0, "Fallback used")
             else:
@@ -226,14 +228,15 @@ class RemoteTrafficGenerator:
         
         return res
     
-    def test_upload_speed(self) -> TrafficTestResult:
-        """Снижен объем до 2MB для ускорения"""
+    def test_upload_speed(self, fast_mode: bool = False) -> TrafficTestResult:
+        """Снижен объем до 1MB в fast_mode, 2MB стандартно"""
         start = time.time()
+        mb_count = 1 if fast_mode else 2
         ok, output = self._sandbox_exec(
-            "dd if=/dev/urandom bs=1M count=2 2>/dev/null | "
+            f"dd if=/dev/urandom bs=1M count={mb_count} 2>/dev/null | "
             "curl -s -w '%{speed_upload}' -X POST -d @- "
             "http://httpbin.org/post -o /dev/null",
-            timeout=30
+            timeout=20 if fast_mode else 30
         )
         duration = (time.time() - start) * 1000
         
@@ -247,7 +250,7 @@ class RemoteTrafficGenerator:
                 pass
         
         if duration > 100:
-            speed_mbps = (2.0 * 8) / (duration / 1000)
+            speed_mbps = (float(mb_count) * 8) / (duration / 1000)
             return TrafficTestResult("upload", True, round(speed_mbps, 2), "Mbps", duration)
         
         return TrafficTestResult("upload", False, 0.0, "Mbps", duration, "Upload test failed")
@@ -341,9 +344,10 @@ class RemoteTrafficGenerator:
     
     # ── Orchestrator (Параллельный запуск) ────────────────────────────────
     
-    def run_full_test(self, cached_metrics: Optional[Dict[str, TrafficTestResult]] = None) -> Dict[str, TrafficTestResult]:
-        """Запуск тестов с разделением на независимые параллельные пулы"""
-        logger.info("Starting optimized remote traffic tests (v3) on VPS...")
+    def run_full_test(self, cached_metrics: Optional[Dict[str, TrafficTestResult]] = None, fast_mode: bool = False) -> Dict[str, TrafficTestResult]:
+        """Запуск тестов с разделением на независимые параллельные пулы и поддержкой Fast-Fail"""
+        mode_str = "FAST " if fast_mode else "Full "
+        logger.info(f"Starting optimized {mode_str}remote traffic tests (v3) on VPS...")
         
         results: Dict[str, TrafficTestResult] = {}
         
@@ -353,6 +357,17 @@ class RemoteTrafficGenerator:
                 if key in cached_metrics:
                     results[key] = cached_metrics[key]
         
+        # Fast-Fail Check: перед тяжелыми загрузками проверяем жив ли вообще коннект
+        ok_ff, out_ff = self._sandbox_exec("ping -c 1 -W 1 8.8.8.8", timeout=2)
+        if not ok_ff or "100% packet loss" in out_ff:
+            logger.warning("Fast-Fail triggered: Sandbox has no internet or high packet loss. Aborting heavy tests.")
+            # Возвращаем "пустые" значения, чтобы AI понял, что конфиг нерабочий
+            return {
+                "latency": TrafficTestResult("latency", False, 0, "ms", 0, "Fast-Fail"),
+                "download": TrafficTestResult("download", False, 0, "Mbps", 0, "Fast-Fail"),
+                "upload": TrafficTestResult("upload", False, 0, "Mbps", 0, "Fast-Fail"),
+            }
+            
         def run_group_a() -> Dict[str, TrafficTestResult]:
             # Прямой SSH, не грузит канал
             res = {}
@@ -373,8 +388,8 @@ class RemoteTrafficGenerator:
         def run_group_c() -> Dict[str, TrafficTestResult]:
             # Sandbox: Ширина канала + Telemetry
             res = {}
-            res.update(self.test_download_and_stability())
-            res["upload"] = self.test_upload_speed()
+            res.update(self.test_download_and_stability(fast_mode=fast_mode))
+            res["upload"] = self.test_upload_speed(fast_mode=fast_mode)
             res.update(self.test_load_telemetry())
             res["xray_drops"] = self.test_xray_stats()
             return res

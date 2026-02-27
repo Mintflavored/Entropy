@@ -31,20 +31,20 @@ def test_apply_advanced_config(agent, mock_ssh):
     success = agent.apply_config(advanced_config)
     assert success is True
     
-    # Check that modify_config.sh was called for each parameter
+    # Check that modify_config.sh was called for all parameters in ONE batch call
     calls = mock_ssh.exec_command.call_args_list
-    assert len(calls) == 8
+    assert len(calls) == 1
     
-    commands_executed = [call[0][0] for call in calls]
+    batch_command = calls[0][0][0]
     
-    assert any("modify_config.sh fq_pacing true" in cmd for cmd in commands_executed)
-    assert any("modify_config.sh tcp_notsent_lowat 131072" in cmd for cmd in commands_executed)
-    assert any("modify_config.sh tcp_fastopen 3" in cmd for cmd in commands_executed)
-    assert any("modify_config.sh tcp_ecn 1" in cmd for cmd in commands_executed)
-    assert any("modify_config.sh tcp_slow_start_after_idle 0" in cmd for cmd in commands_executed)
-    assert any("modify_config.sh utls randomized" in cmd for cmd in commands_executed)
-    assert any("modify_config.sh smux true" in cmd for cmd in commands_executed)
-    assert any("modify_config.sh dns_strategy UseIPv4" in cmd for cmd in commands_executed)
+    assert "modify_config.sh fq_pacing true" in batch_command
+    assert "modify_config.sh tcp_notsent_lowat 131072" in batch_command
+    assert "modify_config.sh tcp_fastopen 3" in batch_command
+    assert "modify_config.sh tcp_ecn 1" in batch_command
+    assert "modify_config.sh tcp_slow_start_after_idle 0" in batch_command
+    assert "modify_config.sh utls randomized" in batch_command
+    assert "modify_config.sh smux true" in batch_command
+    assert "modify_config.sh dns_strategy UseIPv4" in batch_command
 
 def test_apply_advanced_config_failure(agent, mock_ssh):
     """

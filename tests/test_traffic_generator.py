@@ -18,7 +18,13 @@ def generator(mock_ssh):
     return RemoteTrafficGenerator(mock_ssh)
 
 def test_connection_timing(generator, mock_ssh):
-    mock_ssh.exec_command.return_value = (True, "0.100|0.200|0.300")
+    def mock_exec(cmd, *args, **kwargs):
+        if cmd.startswith("ping"):
+            return (True, "1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 10.000/10.000/10.000/0.000 ms")
+        return (True, "0.100|0.200|0.300")
+        
+    mock_ssh.exec_command.side_effect = mock_exec
+    
     res = generator.test_connection_timing()
     assert res["latency"].success
     assert res["latency"].value == 300.0  # ms
@@ -26,7 +32,13 @@ def test_connection_timing(generator, mock_ssh):
     assert res["tls_handshake"].value == 200.0
 
 def test_connection_timing_fail(generator, mock_ssh):
-    mock_ssh.exec_command.return_value = (False, "")
+    def mock_exec_fail(cmd, *args, **kwargs):
+        if cmd.startswith("ping"):
+            return (True, "1 packets transmitted, 1 received, 0% packet loss, time 0ms")
+        return (False, "")
+        
+    mock_ssh.exec_command.side_effect = mock_exec_fail
+    
     res = generator.test_connection_timing()
     assert not res["latency"].success
 
@@ -121,6 +133,7 @@ def test_run_full_test(generator):
     })
     generator.test_mtr = MagicMock(return_value=TrafficTestResult("mtr", True, 0.0, "bool", 0))
     generator.test_xray_stats = MagicMock(return_value=TrafficTestResult("xs", True, 0.0, "count", 0))
+    generator.ssh.exec_command.return_value = (True, "1 packets transmitted, 1 received, 0% packet loss")
     
     results = generator.run_full_test()
     summary = generator.get_summary(results)

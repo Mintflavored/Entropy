@@ -8,8 +8,10 @@ import os
 import logging
 import time
 from datetime import datetime
+from datetime import datetime
 from typing import Dict, Any, Optional, Callable
 import math
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from ai.traffic_generator import RemoteTrafficGenerator, trimmed_mean
 from ai.sandbox_metrics import MetricsStorage, ExperimentResult
@@ -172,7 +174,7 @@ class EAISAgent:
     # --- Сбор контекста сервера ---
     
     def collect_server_context(self) -> Dict[str, Any]:
-        """Собрать полный контекст VPS и VPN конфигурации"""
+        """Собрать полный контекст VPS и VPN конфигурации (ОПТИМИЗИРОВАНО: параллельный сбор)"""
         self._update_status("Сбор информации о сервере...")
         
         context = {}
@@ -187,76 +189,63 @@ class EAISAgent:
             "ram_used": "free -h | grep Mem | awk '{print $3}'",
             "disk_usage": "df -h / | tail -1 | awk '{print $5}'",
             "uptime": "uptime -p",
-        }
-        
-        for key, cmd in commands.items():
-            ok, output = self.ssh.exec_command(cmd, timeout=5)
-            if ok and output.strip():
-                context[key] = output.strip()
-        
-        # Сетевые настройки
-        context["server_ip"] = self.cfg.get("ip", "unknown")
-        net_commands = {
             "tcp_congestion": "sysctl -n net.ipv4.tcp_congestion_control",
             "tcp_rmem": "sysctl -n net.ipv4.tcp_rmem",
             "tcp_wmem": "sysctl -n net.ipv4.tcp_wmem",
-            "mtu": "ip link show | grep -oP 'mtu \\K[0-9]+' | head -1",
+            "mtu": "ip link show | grep -oP 'mtu \\\\K[0-9]+' | head -1",
             "ip_forward": "sysctl -n net.ipv4.ip_forward",
+            "load_avg": "cat /proc/loadavg",
+            "connections_summary": "ss -s | head -5",
+            # VPN панель и протокол
+            "ps_aux": "ps aux",
+            "xray_config_0": "cat /usr/local/x-ui/bin/config.json 2>/dev/null | head -100",
+            "xray_config_1": "cat /usr/local/etc/xray/config.json 2>/dev/null | head -100",
+            "xray_config_2": "cat /etc/xray/config.json 2>/dev/null | head -100"
         }
         
-        for key, cmd in net_commands.items():
+        context["server_ip"] = self.cfg.get("ip", "unknown")
+        
+        def run_ssh_cmd(key: str, cmd: str) -> tuple:
             ok, output = self.ssh.exec_command(cmd, timeout=5)
-            if ok and output.strip():
-                context[key] = output.strip()
-        
-        # VPN панель и протокол
-        ok, ps_output = self.ssh.exec_command("ps aux", timeout=5)
-        if ok:
-            ps_lower = ps_output.lower()
-            panels = []
-            if 'marzban' in ps_lower: panels.append("Marzban")
-            if 'x-ui' in ps_lower or '3x-ui' in ps_lower: panels.append("3X-UI")
-            if 'xray' in ps_lower: panels.append("Xray")
-            if 'sing-box' in ps_lower: panels.append("Sing-box")
-            context["vpn_panels"] = panels
-        
-        # Xray конфигурация (если есть)
-        xray_configs = [
-            "/usr/local/x-ui/bin/config.json",
-            "/usr/local/etc/xray/config.json",
-            "/etc/xray/config.json",
-        ]
-        for cfg_path in xray_configs:
-            ok, output = self.ssh.exec_command(f"cat {cfg_path} 2>/dev/null | head -100", timeout=5)
-            if ok and output.strip().startswith("{"):
+            return key, ok, output
+            
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = [executor.submit(run_ssh_cmd, k, v) for k, v in commands.items()]
+            for future in as_completed(futures):
                 try:
-                    xray_cfg = json.loads(output)
-                    # Извлекаем ключевое: протокол, порт, настройки
-                    inbounds = xray_cfg.get("inbounds", [])
-                    if inbounds:
-                        inbound = inbounds[0]
-                        context["vpn_protocol"] = inbound.get("protocol", "unknown")
-                        context["vpn_port"] = inbound.get("port", "unknown")
-                        stream = inbound.get("streamSettings", {})
-                        context["vpn_network"] = stream.get("network", "unknown")
-                        context["vpn_security"] = stream.get("security", "unknown")
-                        reality = stream.get("realitySettings", {})
-                        if reality:
-                            context["reality_dest"] = reality.get("dest", "unknown")
-                            context["reality_server_names"] = reality.get("serverNames", [])
-                except json.JSONDecodeError:
-                    context["xray_config_raw"] = output[:500]
-                break
-        
-        # Текущая нагрузка
-        ok, load = self.ssh.exec_command("cat /proc/loadavg", timeout=5)
-        if ok:
-            context["load_avg"] = load.strip()
-        
-        # Кол-во активных соединений
-        ok, conns = self.ssh.exec_command("ss -s | head -5", timeout=5)
-        if ok:
-            context["connections_summary"] = conns.strip()
+                    k, ok, output = future.result()
+                    if ok and output.strip():
+                        if k == "ps_aux":
+                            ps_lower = output.lower()
+                            panels = []
+                            if 'marzban' in ps_lower: panels.append("Marzban")
+                            if 'x-ui' in ps_lower or '3x-ui' in ps_lower: panels.append("3X-UI")
+                            if 'xray' in ps_lower: panels.append("Xray")
+                            if 'sing-box' in ps_lower: panels.append("Sing-box")
+                            context["vpn_panels"] = panels
+                        elif k.startswith("xray_config_"):
+                            if output.strip().startswith("{"):
+                                # Парсим Xray конфиг, если мы его нашли
+                                try:
+                                    xray_cfg = json.loads(output)
+                                    inbounds = xray_cfg.get("inbounds", [])
+                                    if inbounds and "vpn_protocol" not in context:
+                                        inbound = inbounds[0]
+                                        context["vpn_protocol"] = inbound.get("protocol", "unknown")
+                                        context["vpn_port"] = inbound.get("port", "unknown")
+                                        stream = inbound.get("streamSettings", {})
+                                        context["vpn_network"] = stream.get("network", "unknown")
+                                        context["vpn_security"] = stream.get("security", "unknown")
+                                        reality = stream.get("realitySettings", {})
+                                        if reality:
+                                            context["reality_dest"] = reality.get("dest", "unknown")
+                                            context["reality_server_names"] = reality.get("serverNames", [])
+                                except json.JSONDecodeError:
+                                    pass
+                        else:
+                            context[k] = output.strip()
+                except Exception as e:
+                    logger.debug(f"Error executing contextual ssh command: {e}")
         
         logger.info(f"Server context collected: {len(context)} fields")
         return context
@@ -307,16 +296,25 @@ class EAISAgent:
     # --- Применение конфига ---
     
     def apply_config(self, config: Dict[str, Any]) -> bool:
+        """Применить конфиг используя батч-выполнение SSH команд для ускорения."""
+        cmds_to_run = []
         for param, value in config.items():
             if param in ("baseline", "reasoning"):
                 continue
-            ok, output = self.ssh.exec_command(
-                f"bash {REMOTE_SANDBOX_DIR}/modify_config.sh {param} {value}",
-                timeout=10
-            )
-            if not ok:
-                logger.warning(f"Failed to apply {param}={value}: {output}")
-                return False
+            # Конкатенируем команды через &&, чтобы не делать по 7-8 RTT запросов на сервер
+            cmds_to_run.append(f"bash {REMOTE_SANDBOX_DIR}/modify_config.sh {param} {value}")
+            
+        if not cmds_to_run:
+            return True
+            
+        # Запускаем батч
+        batch_cmd = " && ".join(cmds_to_run)
+        ok, output = self.ssh.exec_command(batch_cmd, timeout=15)
+        
+        if not ok:
+            logger.warning(f"Failed to apply batched config {config}: {output}")
+            return False
+            
         time.sleep(1)
         return True
     
@@ -328,6 +326,12 @@ class EAISAgent:
         
         baseline_score = getattr(self, '_baseline_result', None)
         baseline_score_val = baseline_score.score if baseline_score else 0.0
+        
+        # Определяем Fast Mode (уменьшенный размер файлов) для экономии времени.
+        # Если baseline download < 50 Mbps, включаем fast_mode для всех остальных тестов.
+        use_fast_mode = False
+        if not is_baseline and baseline_score and baseline_score.download_mbps < 50.0:
+            use_fast_mode = True
 
         scores = []
         all_summaries = []
@@ -338,7 +342,7 @@ class EAISAgent:
             if i > 0:
                 time.sleep(1)
                 
-            results = self.traffic_gen.run_full_test(cached_metrics=self._cached_metrics)
+            results = self.traffic_gen.run_full_test(cached_metrics=self._cached_metrics, fast_mode=use_fast_mode)
             
             # Сохраняем кэш только при Baseline тесте на первой итерации
             if is_baseline and i == 0:
