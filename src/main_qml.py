@@ -11,17 +11,18 @@ import logging
 if getattr(sys, 'frozen', False):
     # Running as bundled exe
     BASE_PATH = sys._MEIPASS
-    # Log to user's AppData folder (writable without admin)
-    log_dir = os.path.join(os.environ.get('APPDATA', os.path.expanduser('~')), 'Entropy')
-    os.makedirs(log_dir, exist_ok=True)
+    # Персистентная папка для данных пользователя (config, db, logs)
+    DATA_DIR = os.path.join(os.environ.get('APPDATA', os.path.expanduser('~')), 'Entropy')
+    os.makedirs(DATA_DIR, exist_ok=True)
     logging.basicConfig(
         level=logging.INFO,
-        filename=os.path.join(log_dir, 'entropy.log'),
+        filename=os.path.join(DATA_DIR, 'entropy.log'),
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
 else:
     # Running from source
     BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    DATA_DIR = BASE_PATH  # При разработке — корень проекта
     logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger("DataBridge")
@@ -227,7 +228,14 @@ def main():
     
     engine = QQmlApplicationEngine()
     
-    cfg = ConfigManager(config_path="config.json")
+    # Конфиг и БД хранятся в персистентной папке DATA_DIR
+    config_path = os.path.join(DATA_DIR, "config.json")
+    cfg = ConfigManager(config_path=config_path)
+    
+    # Если local_db — относительный путь, привязать к DATA_DIR
+    local_db = cfg.get("local_db", "local_stats.db")
+    if not os.path.isabs(local_db):
+        cfg.set("local_db", os.path.join(DATA_DIR, local_db))
     ssh_manager = SSHConnectionManager(cfg)  # SSH для DataBridge (sync)
     ssh_sandbox = SSHConnectionManager(cfg)  # Отдельное SSH для EAIS (sandbox)
     main_vm = MainViewModel(None, SecurityEngine, cfg)

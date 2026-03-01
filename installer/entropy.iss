@@ -2,7 +2,7 @@
 ; Created for v0.33.0+
 
 #define MyAppName "Entropy"
-#define MyAppVersion "0.42.4"
+#define MyAppVersion "0.42.5"
 #define MyAppPublisher "Mintflavored"
 #define MyAppURL "https://github.com/Mintflavored/Entropy"
 #define MyAppExeName "Entropy.exe"
