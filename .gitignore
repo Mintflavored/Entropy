@@ -50,3 +50,5 @@ htmlcov/
 # Release
 *.zip
 *.tar.gz
+server_dna.json
+edp_incidents.db

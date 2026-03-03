@@ -11,11 +11,12 @@ class AIAnalyzer(QThread):
     result_ready = Signal(str)
     error_occurred = Signal(str)
 
-    def __init__(self, cfg, data_context, server_config):
+    def __init__(self, cfg, data_context, server_config, ai_context=None):
         super().__init__()
         self.cfg = cfg
         self.data_context = data_context
         self.server_config = server_config
+        self.ai_context = ai_context  # EDP AIContext (опционально)
 
     def run(self):
         ssh = None
@@ -59,13 +60,21 @@ class AIAnalyzer(QThread):
                 }
             ]
 
+            # Контекст: EDP AIContext или fallback к сырым
+            if self.ai_context:
+                data_section = self.ai_context.to_prompt_text()
+            else:
+                data_section = f"ТЕКУЩИЕ МЕТРИКИ: {json.dumps(self.data_context, ensure_ascii=False)}"
+
             prompt = f"""
             Ты — Senior DevOps & Security эксперт по VPN-инфраструктуре. 
             У тебя есть доступ к серверу через SSH для глубокой диагностики.
             ТЕБЕ ДОСТУПНО МАКСИМУМ {max_calls} SSH-ЗАПРОСОВ.
             
-            ИНФОРМАЦИЯ О СЕРВЕРЕ (Контекст): {json.dumps(self.server_config, ensure_ascii=False)}
-            ТЕКУЩИЕ МЕТРИКИ: {json.dumps(self.data_context, ensure_ascii=False)}
+            ИНФОРМАЦИЯ О СЕРВЕРЕ: {json.dumps(self.server_config, ensure_ascii=False)}
+            
+            ДАННЫЕ РАЗВЕДКИ (EDP):
+            {data_section}
             
             ЗАДАЧА: Проанализируй состояние и дай 3 конкретных совета по безопасности или оптимизации.
             Если нужно проверить конфиги или логи за пределами стандартных метрик, используй `execute_ssh_command`.
@@ -134,11 +143,12 @@ class EAIIWorker(QThread):
     analysis_ready = Signal(float, str) # score, explanation
     error_occurred = Signal(str)
 
-    def __init__(self, cfg, stats, context):
+    def __init__(self, cfg, stats, context, ai_context=None):
         super().__init__()
         self.cfg = cfg
         self.stats = stats
         self.context = context
+        self.ai_context = ai_context  # EDP AIContext (опционально)
 
     def run(self):
         try:
@@ -160,6 +170,12 @@ class EAIIWorker(QThread):
                 from ai.adapters.openai_adapter import OpenAIAdapter
                 adapter = OpenAIAdapter(api_key, base_url if provider == "openai_compatible" else None)
 
+            # Формируем контекст данных: EDP или fallback к сырым
+            if self.ai_context:
+                data_section = self.ai_context.to_prompt_text()
+            else:
+                data_section = f"МЕТРИКИ СЕРВЕРА: {json.dumps(self.stats, ensure_ascii=False)}"
+
             prompt = f"""
             Ты — микро-модуль безопасности Entropy AI Index (EAII) для VPN-сервера.
             
@@ -173,9 +189,12 @@ class EAIIWorker(QThread):
             - Необычно высокий PPS (DDoS)
             - Аномальная нагрузка CPU/RAM
             - Подозрительные probing-атаки
+            - DPI / throttling / блокировка протоколов
             
-            МЕТРИКИ СЕРВЕРА: {json.dumps(self.stats, ensure_ascii=False)}
-            КОНТЕКСТ: {json.dumps(self.context, ensure_ascii=False)}
+            ДАННЫЕ РАЗВЕДКИ (EDP):
+            {data_section}
+            
+            КОНТЕКСТ СЕРВЕРА: {json.dumps(self.context, ensure_ascii=False)}
             
             ВЕРНИ СТРОГО JSON ФОРМАТ:
             {{"score": 0-100, "explanation": "короткое пояснение (1 предложение) на языке пользователя"}}

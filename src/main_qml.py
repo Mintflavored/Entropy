@@ -43,6 +43,7 @@ from core.config import ConfigManager
 from core.data_loader import DataLoader
 from core.ssh_manager import SSHConnectionManager
 from core.security_engine import SecurityEngine
+from core.edp.pipeline import EDPPipeline
 from ai.bridge import EAIIWorker, AIAnalyzer
 from viewmodels.MainViewModel import MainViewModel
 from viewmodels.SandboxViewModel import SandboxViewModel
@@ -61,6 +62,10 @@ class DataBridge(QObject):
         self.discovery_data = {}
         self._discovery_done = False
         self._last_server_ip = None
+        
+        # EDP Pipeline — центральный обработчик данных
+        self.edp = EDPPipeline(data_dir=DATA_DIR)
+        self._last_ai_context = None
         
         # Connect manual trigger to Interactive Deep Scan
         self.vm.manualScanRequested.connect(self.run_interactive_analysis)
@@ -107,7 +112,8 @@ class DataBridge(QObject):
         logger.info("Starting Background EAII Analysis...")
         self.vm.set_eaii_analyzing(True)
         
-        self.eaii_worker = EAIIWorker(self.cfg, self.last_metrics, self.discovery_data)
+        # EDP передаёт AIContext вместо сырых метрик
+        self.eaii_worker = EAIIWorker(self.cfg, self.last_metrics, self.discovery_data, ai_context=self._last_ai_context)
         self.eaii_worker.analysis_ready.connect(self.on_eaii_ready)
         self.eaii_worker.start()
 
@@ -122,7 +128,8 @@ class DataBridge(QObject):
         logger.info("Starting Interactive Deep AI Scan...")
         self.vm.set_interactive_analyzing(True)
         
-        self.ai_analyzer = AIAnalyzer(self.cfg, self.last_metrics, self.discovery_data)
+        # AIAnalyzer тоже получает EDP AIContext
+        self.ai_analyzer = AIAnalyzer(self.cfg, self.last_metrics, self.discovery_data, ai_context=self._last_ai_context)
         self.ai_analyzer.result_ready.connect(self.on_interactive_ready)
         self.ai_analyzer.error_occurred.connect(self.on_interactive_error)
         self.ai_analyzer.start()
@@ -143,11 +150,11 @@ class DataBridge(QObject):
         # Обновляем discovery только если данные есть (не пропустили)
         if discovery:
             self.discovery_data = discovery
-            self._discovery_done = True  # Помечаем discovery как выполненный
+            self._discovery_done = True
         
         current_pps = 0
         current_jitter = 0.0
-        probing_count = 0
+        probing_list = []
         
         if security_data:
             # 1. PPS
@@ -163,7 +170,6 @@ class DataBridge(QObject):
             
             # 3. PROBING
             probing_list = SecurityEngine.parse_probes(security_data.get('ssh_probes', []))
-            probing_count = len(probing_list)
             
         # 4. DB Data (CPU/RAM/Users)
         cpu = 0.0
@@ -172,11 +178,9 @@ class DataBridge(QObject):
         try:
             conn = sqlite3.connect(self.cfg.get("local_db"))
             
-            # System stats
             query_sys = "SELECT cpu, ram FROM system_stats ORDER BY timestamp DESC LIMIT 1"
             df_sys = pd.read_sql(query_sys, conn)
             
-            # User stats
             query_users = "SELECT email, MAX(down)/1024/1024 as d, MAX(up)/1024/1024 as u FROM user_stats GROUP BY email ORDER BY d DESC"
             df_users = pd.read_sql(query_users, conn)
             
@@ -190,30 +194,39 @@ class DataBridge(QObject):
                 for _, row in df_users.iterrows():
                     users_list.append({
                         "user": row['email'],
-                        "ip": "N/A", # IP is not directly in this table
+                        "ip": "N/A",
                         "traffic": f"{round(row['d'] + row['u'], 2)} MB"
                     })
         except sqlite3.OperationalError:
-            # Table might not exist yet if loader just started
             pass
         except Exception as e:
             logger.error(f"DB Error: {e}")
 
-        # 5. RISK
-        risk_data = SecurityEngine.calculate_risk(current_pps, current_jitter, probing_count)
+        # === EDP Pipeline — единственный обработчик данных ===
+        raw_edp = {
+            "cpu": cpu, "ram": ram, "pps": current_pps, "jitter": current_jitter,
+            "users_count": len(users_list),
+            "probes": probing_list,
+        }
+        edp_result = self.edp.process(raw_edp)
+        self._last_ai_context = edp_result.ai_context
+        
+        # Risk score теперь вычисляется EDP (не SecurityEngine)
+        risk_data = edp_result.risk_data
         
         self.last_metrics = {
             "cpu": cpu, "ram": ram, "pps": current_pps, "jitter": current_jitter,
             "risk_score": risk_data[2], "users_count": len(users_list)
         }
         
-        # Run EAII on first successful sync (when data is available)
+        # EAII на первом успешном sync
         if self._first_run and self.cfg.get("eaii_enabled", True):
             self._first_run = False
             self.run_eaii()
 
         # UPDATE VM
         self.vm.update_metrics(cpu, ram, current_pps, current_jitter, risk_data)
+        self.vm.update_metrics_edp(edp_result)
         self.vm.update_users(users_list)
         self.vm.update_probes(probing_list if security_data else [])
 

@@ -1,6 +1,8 @@
 from PySide6.QtCore import QObject, Signal, Property, Slot, QTimer
 from core.localization import L
-import random
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MainViewModel(QObject):
     # Signals
@@ -20,6 +22,9 @@ class MainViewModel(QObject):
     # Security/Users Properties
     usersChanged = Signal()
     probesChanged = Signal()
+    
+    # EDP Properties
+    edpChanged = Signal()
     
     @Property(float, notify=eaiiChanged)
     def aiRiskScore(self): return self._ai_risk_score
@@ -74,6 +79,14 @@ class MainViewModel(QObject):
         self._jitter_history = [0.0] * 60
         self._max_history = 60
         
+        # EDP State
+        self._event_stream = []       # Последние 20 событий
+        self._incident_matches = []   # Текущие совпадения с Incident Memory
+        self._cpu_verdict = "normal"
+        self._ram_verdict = "normal"
+        self._pps_verdict = "normal"
+        self._jitter_verdict = "normal"
+        
     @Slot(float, str)
     def update_eaii(self, score, explanation):
         self._ai_risk_score = score
@@ -112,6 +125,28 @@ class MainViewModel(QObject):
     def update_probes(self, probe_list):
         self._probes_data = probe_list
         self.probesChanged.emit()
+
+    def update_metrics_edp(self, edp_result):
+        """Обновление данных от EDP Pipeline (enriched)."""
+        snap = edp_result.snapshot
+        
+        # Verdicts от Server DNA
+        self._cpu_verdict = snap.cpu.verdict
+        self._ram_verdict = snap.ram.verdict
+        self._pps_verdict = snap.pps.verdict
+        self._jitter_verdict = snap.jitter.verdict
+        
+        # Event Stream — последние 20 событий
+        for event in edp_result.events:
+            self._event_stream.insert(0, event.to_dict())
+        self._event_stream = self._event_stream[:20]
+        
+        # Incident Memory matches
+        self._incident_matches = [
+            m.to_dict() for m in edp_result.incident_matches
+        ]
+        
+        self.edpChanged.emit()
 
     def update_metrics(self, cpu, ram, pps, jitter, risk_data):
         self._cpu = cpu
@@ -160,6 +195,25 @@ class MainViewModel(QObject):
     
     @Property(list, notify=probesChanged)
     def probesData(self): return self._probes_data
+
+    # EDP Properties
+    @Property(list, notify=edpChanged)
+    def eventStream(self): return self._event_stream
+    
+    @Property(list, notify=edpChanged)
+    def incidentMatches(self): return self._incident_matches
+    
+    @Property(str, notify=edpChanged)
+    def cpuVerdict(self): return self._cpu_verdict
+    
+    @Property(str, notify=edpChanged)
+    def ramVerdict(self): return self._ram_verdict
+    
+    @Property(str, notify=edpChanged)
+    def ppsVerdict(self): return self._pps_verdict
+    
+    @Property(str, notify=edpChanged)
+    def jitterVerdict(self): return self._jitter_verdict
 
     @Property(float, notify=cpuChanged)
     def cpu(self): return self._cpu

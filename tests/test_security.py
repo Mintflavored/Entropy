@@ -2,26 +2,6 @@ import math
 import pytest
 from core.security_engine import SecurityEngine
 
-def test_smart_risk_low():
-    label, color, score = SecurityEngine.calculate_risk(10, 5, 0)
-    assert score < 15
-    assert label == "LOW"
-    assert color == "#00ff00"
-
-def test_smart_risk_high():
-    # 500 PPS + 40ms Jitter should be high/critical
-    label, color, score = SecurityEngine.calculate_risk(500, 40, 0)
-    assert score > 40
-    assert label in ["HIGH", "CRITICAL"]
-
-def test_smart_risk_with_brute_force():
-    # High brute force should push risk up
-    label_no_bf, _, score_no_bf = SecurityEngine.calculate_risk(50, 5, 0)
-    label_bf, _, score_bf = SecurityEngine.calculate_risk(50, 5, 10) # 10 attempts
-    
-    assert score_bf > score_no_bf
-    assert score_bf >= score_no_bf + 30 # 30 is the weight for 10 attempts (min(100, 10*10) * 0.3)
-
 def test_pps_calculation():
     # 1000 packets in 10s = 100 pps
     pps = SecurityEngine.calculate_pps(2000, 1000, 10000)
@@ -33,3 +13,25 @@ def test_jitter_calculation():
     assert jitter > 0
     # Standard deviation of [10, 20, 10, 20] is 5.0
     assert jitter == 5.0
+
+def test_parse_probes():
+    probes = SecurityEngine.parse_probes(["1.1.1.1", "2.2.2.2", "1.1.1.1"])
+    assert len(probes) == 2
+    # Check that counts are accumulated
+    ip_map = {p["ip"]: p["attempts"] for p in probes}
+    assert ip_map["1.1.1.1"] == 2
+    assert ip_map["2.2.2.2"] == 1
+
+def test_parse_probes_empty():
+    assert SecurityEngine.parse_probes([]) == []
+    assert SecurityEngine.parse_probes(None) == []
+
+def test_pps_negative_delta():
+    """Negative delta (interface reset) should return 0."""
+    pps = SecurityEngine.calculate_pps(100, 200, 10000)
+    assert pps == 0
+
+def test_jitter_single_value():
+    """Less than 2 latencies → jitter 0."""
+    assert SecurityEngine.calculate_jitter([10]) == 0.0
+    assert SecurityEngine.calculate_jitter([]) == 0.0

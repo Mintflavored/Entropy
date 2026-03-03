@@ -92,9 +92,8 @@ def test_databridge_run_interactive(MockAnalyzer, mock_qtimer, mock_cfg, mock_vm
 @patch("src.main_qml.SecurityEngine.calculate_pps", return_value=100)
 @patch("src.main_qml.SecurityEngine.calculate_jitter", return_value=5.0)
 @patch("src.main_qml.SecurityEngine.parse_probes", return_value=["1.1.1.1"])
-@patch("src.main_qml.SecurityEngine.calculate_risk", return_value=["LOW", "#0f0", 5.0])
 def test_databridge_on_data_ready_success(
-    mock_risk, mock_parse_probes, mock_jitter, mock_pps,
+    mock_parse_probes, mock_jitter, mock_pps,
     mock_read_sql, mock_connect, mock_qtimer, mock_cfg, mock_vm, mock_ssh
 ):
     bridge = DataBridge(mock_cfg, mock_vm, mock_ssh)
@@ -115,7 +114,15 @@ def test_databridge_on_data_ready_success(
     assert bridge.last_raw_packets == "200"
     
     mock_pps.assert_called_with("200", "100", 1000)
-    mock_vm.update_metrics.assert_called_with(10.0, 512.0, 100, 5.0, ["LOW", "#0f0", 5.0])
+    
+    # Risk now comes from EDP Pipeline, not SecurityEngine
+    call_args = mock_vm.update_metrics.call_args[0]
+    assert call_args[0] == 10.0   # cpu
+    assert call_args[1] == 512.0  # ram
+    assert call_args[2] == 100    # pps
+    assert call_args[3] == 5.0    # jitter
+    # risk_data is a tuple from EDP
+    assert isinstance(call_args[4], tuple)
     
     users_list_arg = mock_vm.update_users.call_args[0][0]
     assert len(users_list_arg) == 1
@@ -123,6 +130,9 @@ def test_databridge_on_data_ready_success(
     assert users_list_arg[0]["traffic"] == "15.0 MB"
     
     mock_vm.update_probes.assert_called_with(["1.1.1.1"])
+    
+    # EDP enriched update should be called
+    mock_vm.update_metrics_edp.assert_called_once()
     
     # check that EAII was run automatically since _first_run was True
     assert not bridge._first_run
